@@ -7,9 +7,10 @@
 
 //global variable
 
-struct node * ships_list = NULL;
+
 int row = ROW,col = COL;
 int ship_map1[ROW][COL];
+char shot_map1[ROW][COL];
 //structs
 
 typedef struct{
@@ -38,17 +39,48 @@ struct node * create_node(ship ship_info){
     new->next = NULL;
     return new;
 }
-void add_end( struct node * list, struct node * new){
-    if(list == NULL)
-        list = new;
+
+void add_end(struct node ** list, struct node * new){
+    if(*list == NULL)
+        *list = new;
     else{
-        struct node *curr;
-        for(curr = list; curr->next != NULL; curr = curr->next);
+        struct node * curr;
+        for(curr = *list; curr->next != NULL; curr = curr->next);
         curr->next = new;
     }
 }
 
 
+void delete_node(struct node * list, struct node * del){
+    
+    if(del == list){
+        list = del->next;
+        free(del);
+        return;
+    }
+    struct node * curr = list ->next;
+    struct node * prev = list;
+    while (curr != NULL)
+    {
+        if(curr == del){
+            prev->next = curr->next;
+            free(curr);
+            return;
+        }
+        curr = curr->next;
+        prev = prev->next;
+    }
+}
+
+void print_list(struct node * list){
+    struct node * curr = list;
+    while (curr != NULL)
+    {
+        printf("%d ", curr->info.len);
+        curr = curr->next;
+    }
+    printf("\n");
+}
 //game functions
 void help(){
     printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.");
@@ -70,9 +102,9 @@ void show_map(char map[row][col]){
         printf("-");
     printf("\n");
 
-    for (int i = 1; i <= row; i++)
+    for (int i = 0; i < row; i++)
     {
-        printf("| %d ", i);
+        printf("|%2d ", i);
         for (int j = 0; j < col; j++)
             printf("| %c ", map[i][j]);
         printf("|\n");
@@ -117,7 +149,7 @@ bool isvalid_ship_point(point start, point end, int len, int ship_map[row][col])
     return true;
 
 }
-void get_ships(struct node *ships_list, int ship_num[4][2], int ship_map[row][col]){                    //ship_num[4 = num of different lens][number of ship with <- len]
+void get_ships(struct node **ships_list, int ship_num[4][2], int ship_map[row][col]){                    //ship_num[4 = num of different lens][number of ship with <- len]
     int ship_index = 1;
     printf("Enter start and end point of your ships:\n");
 
@@ -163,18 +195,52 @@ void get_ships(struct node *ships_list, int ship_num[4][2], int ship_map[row][co
     
     }
 }
+
+char is_on_ship(char shot_map[row][col], point p, struct node * ships_list){
+    struct node *curr = ships_list;
+    while (curr != NULL)
+    {
+        if((p.x <= curr->info.end.x && p.x >= curr->info.start.x && p.y == curr->info.start.y) || (p.y <= curr->info.end.y && p.y >= curr->info.start.y && p.x == curr->info.start.x)){
+            //^ check if the point is on a ship
+            (curr->info.destroy) ++;
+            if(curr->info.destroy == curr->info.len){
+                return 'C';
+                delete_node(ships_list, curr);
+            }
+            return 'E';
+        }
+        curr = curr->next;
+
+    }
+    return 'W';
+    
+}
+
+void shot(char shot_map[row][col],struct node * ships_list){
+    point p;
+    scanf("%d %d", &p.x,&p.y);
+    if (shot_map[p.x][p.y] == '\0')
+        shot_map[p.x][p.y] = is_on_ship(shot_map, p, ships_list);
+    else
+        printf("wrong point !");                                                        //was chosen=) already
+}
+
 int main(){
     /*int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
+    struct node * ships_list = NULL;
     for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
         printf("%d ", ship_map1[i][j]);
         printf("\n");
     }
-    get_ships(ships_list, num,ship_map1);
+    get_ships(&ships_list, num,ship_map1);
     for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
         printf("%d ", ship_map1[i][j]);
         printf("\n");
-    }*/
+    }
+    
+    shot(shot_map1, ships_list);
+    show_map(shot_map1);*/
 
 }
