@@ -11,6 +11,7 @@
 int row = ROW,col = COL;
 int ship_map1[ROW][COL];
 char shot_map1[ROW][COL];
+int score1 = 0, score2 = 0;
 //structs
 
 typedef struct{
@@ -51,15 +52,15 @@ void add_end(struct node ** list, struct node * new){
 }
 
 
-void delete_node(struct node * list, struct node * del){
+void delete_node(struct node ** list, struct node * del){
     
-    if(del == list){
-        list = del->next;
+    if(del == *list){
+        *list = (*list)->next;
         free(del);
         return;
     }
-    struct node * curr = list ->next;
-    struct node * prev = list;
+    struct node * curr = (*list) ->next;
+    struct node * prev = (*list);
     while (curr != NULL)
     {
         if(curr == del){
@@ -104,7 +105,7 @@ void show_map(char map[row][col]){
 
     for (int i = 0; i < row; i++)
     {
-        printf("|%2d ", i);
+        printf("|%2d ", i + 1);
         for (int j = 0; j < col; j++)
             printf("| %c ", map[i][j]);
         printf("|\n");
@@ -164,27 +165,33 @@ void get_ships(struct node **ships_list, int ship_num[4][2], int ship_map[row][c
             int IsValid = 0;                                                 //for cheking validation of points
             while(IsValid == 0){                                             //getting start point ship[ship_index]
                 point start, end;
+                char start_y, end_y;
                 printf("Start point of ship #%d with len %d (x, y): ", j + 1,ship_num[i][0]);
-                scanf("%d %d",&(start.x), &(start.y));
+                scanf("%d %c",&(start.x), &(start_y));
                 printf("End point of ship #%d with len %d (x, y): ", j + 1,ship_num[i][0]);
-                scanf("%d %d",&(end.x), &(end.y));
+                scanf("%d %c",&(end.x), &(end_y));
                 
+                start.y = start_y - 'A';
+                end.y = end_y - 'A';
+                start.x --;
+                end.x --;
+
                 if(start.x > end.x || start.y > end.y)
                     swap(&start, &end);
 
                 if(isvalid_ship_point(start, end, ship_num[i][0], ship_map)){
-                    struct node * ship = (struct node *)malloc(sizeof(struct node));        //create new node
-                    ship->info.len = ship_num[i][0];
-                    ship->info.destroy = 0;
-                    ship->info.start = start;
-                    ship->info.end = end;
-                    ship->info.num = ship_index;
-                    ship->next = NULL;
+                    ship new_ship;        //create new node
+                    new_ship.len = ship_num[i][0];
+                    new_ship.destroy = 0;
+                    new_ship.start = start;
+                    new_ship.end = end;
+                    new_ship.num = ship_index;
+                    add_end(ships_list,create_node(new_ship));                            //add to list
                     for (int k = start.x; k <= end.x ; k++)                                //mark ships place in matrix ship_map 
                         for(int m = start.y; m <= end.y ; m++)
                             ship_map[k][m] = ship_index;
                     IsValid = 1;
-                    add_end(ships_list,ship);                                             //add to list
+                    
                     ship_index ++;
                 }
                 else
@@ -196,35 +203,79 @@ void get_ships(struct node **ships_list, int ship_num[4][2], int ship_map[row][c
     }
 }
 
-char is_on_ship(char shot_map[row][col], point p, struct node * ships_list){
-    struct node *curr = ships_list;
-    while (curr != NULL)
-    {
-        if((p.x <= curr->info.end.x && p.x >= curr->info.start.x && p.y == curr->info.start.y) || (p.y <= curr->info.end.y && p.y >= curr->info.start.y && p.x == curr->info.start.x)){
-            //^ check if the point is on a ship
-            (curr->info.destroy) ++;
-            if(curr->info.destroy == curr->info.len){
-                return 'C';
-                delete_node(ships_list, curr);
-            }
-            return 'E';
-        }
-        curr = curr->next;
+//char is_on_ship(char shot_map[row][col], point p, struct node * ships_list){
 
+point shot(char shot_map[row][col],struct node * ships_list){
+    point p;
+    char p_y;
+    printf("Enter your shot: ");
+    scanf("%d %c", &p.x,&p_y);
+    p.y = p_y - 'A';
+    (p.x)--;
+    
+    if (shot_map[p.x][p.y] == '\0'){
+        
+        struct node *curr = ships_list;
+        while (curr != NULL)
+        {
+            if((p.x <= curr->info.end.x && p.x >= curr->info.start.x && p.y == curr->info.start.y) || (p.y <= curr->info.end.y && p.y >= curr->info.start.y && p.x == curr->info.start.x)){
+                //^ check if the point is on a ship
+                (curr->info.destroy) ++;
+                
+                if(curr->info.destroy == curr->info.len){
+                    
+                    for (int i = curr->info.start.x; i <= curr->info.end.x ; i++)
+                        for(int j = curr->info.start.y; j <= curr->info.end.y ; j++)
+                            shot_map[i][j] = 'C';
+                    delete_node(&ships_list, curr);
+                    
+
+                    return p;
+
+                    
+                }
+                shot_map[p.x][p.y] = 'E';
+                return p;
+            }
+            curr = curr->next;
+
+        }
+        shot_map[p.x][p.y] = 'W';
+        return p;
     }
-    return 'W';
+    else
+        printf("wrong point !");                                                  //was chosen=) already
+}
+
+void GameLoop(struct node * ships_list_1, struct node * ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
+    int turn = 0;
+    point p;
+    while (ships_list_1 != NULL && ships_list_2 != NULL)
+    {
+        if(turn % 2 == 0){
+            do
+            {
+                printf("Player 1:\n");
+                p = shot(shot_map_1, ships_list_1);
+                show_map(shot_map_1);
+                
+            } while (shot_map_1[p.x][p.y] != 'W');
+            //printf("next");
+            turn ++;
+        }
+        else
+        {
+            do
+            {
+                printf("Player 2:\n");
+                p = shot(shot_map_2, ships_list_2);
+            } while (is_on_ship != 'W');
+            turn ++;
+        }
+        
+    }
     
 }
-
-void shot(char shot_map[row][col],struct node * ships_list){
-    point p;
-    scanf("%d %d", &p.x,&p.y);
-    if (shot_map[p.x][p.y] == '\0')
-        shot_map[p.x][p.y] = is_on_ship(shot_map, p, ships_list);
-    else
-        printf("wrong point !");                                                        //was chosen=) already
-}
-
 int main(){
     /*int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
     struct node * ships_list = NULL;
@@ -240,7 +291,7 @@ int main(){
         printf("\n");
     }
     
-    shot(shot_map1, ships_list);
+    GameLoop(ships_list,NULL,shot_map1,shot_map1);
     show_map(shot_map1);*/
 
 }
