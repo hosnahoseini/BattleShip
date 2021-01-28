@@ -8,10 +8,11 @@
 //global variable
 
 
-int row = ROW,col = COL;
-int ship_map1[ROW][COL];
+const int row = ROW,col = COL;
+int ship_map1[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
 char shot_map1[ROW][COL];
-int score1 = 0, score2 = 0;
+int score[2];                                                               //scores of two players save here --> score[0] = player one scores & score[1] = player 2 scores
+int ship_score[6] = {0, 25, 12, 8, 0, 5};                                   //scores for each ship --> [0->ND, 1->25, 2->12, 3->8, 4->ND, 5->5]
 //structs
 
 typedef struct{
@@ -27,11 +28,12 @@ typedef struct{
     int num;
 }ship;
 
-
 struct node{
     ship info;
     struct node *next;
 };
+
+//linked list functions
 
 struct node * create_node(ship ship_info){
     struct node * new = (struct node *)malloc(sizeof(struct node));
@@ -83,7 +85,9 @@ void print_list(struct node * list){
     }
     printf("\n");
 }
+
 //game functions
+
 void help(){
     printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.");
     getchar();
@@ -116,6 +120,7 @@ void show_map(char map[row][col]){
         printf("\n");
     }
 }
+
 void swap(point *p1, point *p2){
     point tmp = *p1;
     *p1 = *p2;
@@ -206,7 +211,7 @@ void get_ships(struct node **ships_list, int ship_num[4][2], int ship_map[row][c
 
 //char is_on_ship(char shot_map[row][col], point p, struct node * ships_list){
 
-point shot(char shot_map[row][col],struct node ** ships_list){
+point shot(char shot_map[row][col],struct node ** ships_list, int turn){
     point p;
     char p_y;
     printf("Enter your shot: ");
@@ -230,13 +235,14 @@ point shot(char shot_map[row][col],struct node ** ships_list){
                         for(int j = curr->info.start.y; j <= curr->info.end.y ; j++)
                             shot_map[i][j] = 'C';
                     delete_node(ships_list, curr);                         //edit for first node!!!
-                    
+                    score[turn] += (1 + ship_score[curr->info.len]);       //score for complete destruction of shops
 
                     return p;
 
                     
                 }
                 shot_map[p.x][p.y] = 'E';
+                score[turn] ++;                                           //one point for each successful shot
                 return p;
             }
             curr = curr->next;
@@ -256,14 +262,14 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             do
             {
                 printf("Player 1:\n");
-                p = shot(shot_map_1, ships_list_1);
+                p = shot(shot_map_1, ships_list_1, turn);
                 show_map(shot_map_1);
-                
-            } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
+                printf("score = %d\n", score[turn]);
+            } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL /*&& *ships_list_2 != NULL*/);
             printf("next");
-            turn ++;
+            //turn ++;
         }
-        else
+        /*else
         {
             do
             {
@@ -272,13 +278,13 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             } while (shot_map_2[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
             turn ++;
             
-        }
+        }*/
         
     
     
 }
 int main(){
-    /*int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
+    int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
     struct node * ships_list = NULL;
     for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
@@ -293,6 +299,6 @@ int main(){
     }
     
     shot_loop(&ships_list,NULL,shot_map1,shot_map1);
-    show_map(shot_map1);*/
+    show_map(shot_map1);
 
 }
