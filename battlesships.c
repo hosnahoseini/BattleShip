@@ -4,13 +4,13 @@
 #include<math.h>
 #define COL 10
 #define ROW 10
+#define MAX_LEN_NAME 1000
 
 //global variable
 
-
-int row = ROW,col = COL;
-int ship_map1[ROW][COL];
-char shot_map1[ROW][COL];
+const int row = ROW,col = COL;
+//int ship_map1[ROW][COL];
+//char shot_map1[ROW][COL];
 int score1 = 0, score2 = 0;
 //structs
 
@@ -27,6 +27,14 @@ typedef struct{
     int num;
 }ship;
 
+typedef struct 
+{
+    char name[MAX_LEN_NAME];
+    struct node * ships_list;
+    char shot_map[ROW][COL];
+    int ship_map[ROW][COL];
+    int score;
+}player;
 
 struct node{
     ship info;
@@ -278,21 +286,16 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
     
 }
 int main(){
-    /*int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
-    struct node * ships_list = NULL;
+    int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
+    player one = {"hosna", NULL};
+    get_ships(&(one.ships_list), num,one.ship_map);
     for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
-        printf("%d ", ship_map1[i][j]);
-        printf("\n");
-    }
-    get_ships(&ships_list, num,ship_map1);
-    for(int i =0 ; i<row;i++){
-        for(int j =0;j<col;j++)
-        printf("%d ", ship_map1[i][j]);
+        printf("%d ", one.ship_map[i][j]);
         printf("\n");
     }
     
-    shot_loop(&ships_list,NULL,shot_map1,shot_map1);
-    show_map(shot_map1);*/
+    shot_loop(&(one.ships_list),NULL,one.shot_map,one.shot_map);
+    show_map(one.shot_map);
 
 }
