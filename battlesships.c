@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<math.h>
+#include<time.h>
 #define COL 10
 #define ROW 10
 
@@ -209,7 +210,56 @@ void get_ships(struct node **ships_list, int ship_num[4][2], int ship_map[row][c
     }
 }
 
-//char is_on_ship(char shot_map[row][col], point p, struct node * ships_list){
+void get_ships_auto(struct node **ships_list, int ship_num[4][2], int ship_map[row][col]){
+    int ship_index = 1;
+    time_t t=time(NULL);
+    srand(t);
+    for (int i = 0; i < 4; i++)                                               //loop for differrnt len
+    {
+        //Info of ships with len ship_num[i][0]
+
+        for (int j = 0; j < ship_num[i][1]; j++)                             //loop for ships with same len
+        {
+
+            int IsValid = 0;                                                 //for cheking validation of points
+            while(IsValid == 0){                                             //getting start point ship[ship_index]
+                point start, end;
+                int horizontal_or_vetical = rand() % 2;                        //horizontal_or_vetical = 0 --> horizontal
+                                                                             //horizontal_or_vetical = 1 -->vertical
+
+                if(horizontal_or_vetical){
+                    start.x = end.x = rand() % row;
+                    start.y = rand() % (col - ship_num[i][0] + 1);
+                    end.y = start.y + ship_num[i][0] - 1;
+                }
+                else
+                {
+                    start.y = end.y = rand() % col;
+                    start.x = rand() % (row - ship_num[i][0] + 1);
+                    end.x = start.x + ship_num[i][0] - 1;
+                }
+
+                if(isvalid_ship_point(start, end, ship_num[i][0], ship_map)){
+                    ship new_ship;        //create new node
+                    new_ship.len = ship_num[i][0];
+                    new_ship.destroy = 0;
+                    new_ship.start = start;
+                    new_ship.end = end;
+                    new_ship.num = ship_index;
+                    add_end(ships_list,create_node(new_ship));                            //add to list
+                    for (int k = start.x; k <= end.x ; k++)                                //mark ships place in matrix ship_map 
+                        for(int m = start.y; m <= end.y ; m++)
+                            ship_map[k][m] = ship_index;
+                    IsValid = 1;
+                    
+                    ship_index ++;
+                }
+            }
+        
+        }
+    
+    }
+}
 
 point shot(char shot_map[row][col],struct node ** ships_list, int turn){
     point p;
@@ -258,6 +308,7 @@ point shot(char shot_map[row][col],struct node ** ships_list, int turn){
 void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     int turn = 0;
     point p;
+    show_map(shot_map_1);
         if(turn % 2 == 0){
             do
             {
@@ -266,7 +317,7 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
                 show_map(shot_map_1);
                 printf("score = %d\n", score[turn]);
             } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL /*&& *ships_list_2 != NULL*/);
-            printf("next");
+            printf("next\n");
             //turn ++;
         }
         /*else
@@ -286,12 +337,13 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
 int main(){
     int num[4][2] = {{1,1},{2,1},{3,1},{5,1}};
     struct node * ships_list = NULL;
-    for(int i =0 ; i<row;i++){
+    /*for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
         printf("%d ", ship_map1[i][j]);
         printf("\n");
-    }
-    get_ships(&ships_list, num,ship_map1);
+    }*/
+    //printf("----------------");
+    get_ships_auto(&ships_list, num,ship_map1);
     for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
         printf("%d ", ship_map1[i][j]);
