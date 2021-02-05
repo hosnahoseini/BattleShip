@@ -7,18 +7,6 @@
 #define COL 10
 #define ROW 10
 
-//global variable
-
-int ship_num[4][2] = {{1,4},{2,3},{3,2},{5,1}};
-int row = ROW,col = COL;
-char ship_map_1[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
-char shot_map_1[ROW][COL];
-char ship_map_2[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
-char shot_map_2[ROW][COL];
-struct node * ships_list_1 = NULL,* ships_list_2 = NULL;
-char name_1[100], name_2[100];
-int score[2];                                                               //scores of two players save here --> score[0] = player one scores & score[1] = player 2 scores
-int ship_score[6] = {0, 25, 12, 8, 0, 5};                                   //scores for each ship --> [0->ND, 1->25, 2->12, 3->8, 4->ND, 5->5]
 //structs
 
 typedef struct{
@@ -38,6 +26,26 @@ struct node{
     ship info;
     struct node *next;
 };
+
+typedef struct{
+    int len;
+    int num;
+    int score;
+}ship_info;
+
+//global variable
+
+
+int row = ROW,col = COL;
+char ship_map_1[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
+char shot_map_1[ROW][COL];
+char ship_map_2[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
+char shot_map_2[ROW][COL];
+struct node * ships_list_1 = NULL,* ships_list_2 = NULL;
+char name_1[100], name_2[100];
+int score[2];                                                               //scores of two players save here --> score[0] = player one scores & score[1] = player 2 scores
+ship_info *ShipInfo;                                                        //len, number, scores of each ship type
+int number = 4;                                                             //number of ships type
 
 //linked list functions
 
@@ -104,6 +112,24 @@ void menu (){
     printf("1)Play with a friend\n2)Play with a bot\n3)Load game\n4)Load last game\n5)Setting\n6)Score board\n7)Exit\n");
 }
 
+void init_ship_info (ship_info *ShipInfo){
+
+    ShipInfo = (ship_info*) malloc(4 * sizeof(ship_info));
+    ShipInfo[0].len = 1;
+    ShipInfo[0].num = 4;
+    ShipInfo[0].score = 25;
+    ShipInfo[1].len = 2;
+    ShipInfo[1].num = 3;
+    ShipInfo[1].score = 12;
+    ShipInfo[2].len = 3;
+    ShipInfo[2].num = 2;
+    ShipInfo[2].score = 8;
+    ShipInfo[3].len = 5;
+    ShipInfo[3].num = 1;
+    ShipInfo[3].score = 5;
+
+}
+
 void show_map(char map[row][col]){
     printf("    ");
     for(char c = 'A'; c < ('A' + col); c++)
@@ -162,25 +188,25 @@ bool isvalid_ship_point(point start, point end, int len, char ship_map[row][col]
     return true;
 
 }
-void get_ships(struct node **ships_list, char ship_map[row][col]){                    //ship_num[4 = num of different lens][number of ship with <- len]
+void get_ships(struct node **ships_list, char ship_map[row][col]){                    
     int ship_index = 1;
     printf("Enter start and end point of your ships:\n");
 
     
-    for (int i = 0; i < 4; i++)                                               //loop for differrnt len
+    for (int i = 0; i < number; i++)                                               //loop for differrnt len
     {
-        printf("Info of ships with len = %d:\n",ship_num[i][0]);
+        printf("Info of ships with len = %d:\n",ShipInfo[i].len);
 
-        for (int j = 0; j < ship_num[i][1]; j++)                             //loop for ships with same len
+        for (int j = 0; j < ShipInfo[i].num; j++)                             //loop for ships with same len
         {
 
             int IsValid = 0;                                                 //for cheking validation of points
             while(IsValid == 0){                                             //getting start point ship[ship_index]
                 point start, end;
                 char start_y, end_y;
-                printf("Start point of ship #%d with len %d (x, y): ", j + 1,ship_num[i][0]);
+                printf("Start point of ship #%d with len %d (x, y): ", j + 1,ShipInfo[i].len);
                 scanf("%d %c",&(start.x), &(start_y));
-                printf("End point of ship #%d with len %d (x, y): ", j + 1,ship_num[i][0]);
+                printf("End point of ship #%d with len %d (x, y): ", j + 1,ShipInfo[i].len);
                 scanf("%d %c",&(end.x), &(end_y));
                 system("cls");
                 start.y = start_y - 'A';
@@ -191,9 +217,9 @@ void get_ships(struct node **ships_list, char ship_map[row][col]){              
                 if(start.x > end.x || start.y > end.y)
                     swap(&start, &end);
 
-                if(isvalid_ship_point(start, end, ship_num[i][0], ship_map)){
+                if(isvalid_ship_point(start, end, ShipInfo[i].len, ship_map)){
                     ship new_ship;        //create new node
-                    new_ship.len = ship_num[i][0];
+                    new_ship.len = ShipInfo[i].len;
                     new_ship.destroy = 0;
                     new_ship.start = start;
                     new_ship.end = end;
@@ -220,11 +246,11 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
     int ship_index = 1;
     time_t t=time(NULL);
     srand(t);
-    for (int i = 0; i < 4; i++)                                               //loop for differrnt len
+    for (int i = 0; i < number; i++)                                               //loop for differrnt len
     {
-        //Info of ships with len ship_num[i][0]
+        //Info of ships with len ShipInfo[i].len
 
-        for (int j = 0; j < ship_num[i][1]; j++)                             //loop for ships with same len
+        for (int j = 0; j < ShipInfo[i].num; j++)                             //loop for ships with same len
         {
 
             int IsValid = 0;                                                 //for cheking validation of points
@@ -235,19 +261,19 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
 
                 if(horizontal_or_vetical){
                     start.x = end.x = rand() % row;
-                    start.y = rand() % (col - ship_num[i][0] + 1);
-                    end.y = start.y + ship_num[i][0] - 1;
+                    start.y = rand() % (col - ShipInfo[i].len + 1);
+                    end.y = start.y + ShipInfo[i].len - 1;
                 }
                 else
                 {
                     start.y = end.y = rand() % col;
-                    start.x = rand() % (row - ship_num[i][0] + 1);
-                    end.x = start.x + ship_num[i][0] - 1;
+                    start.x = rand() % (row - ShipInfo[i].len + 1);
+                    end.x = start.x + ShipInfo[i].len - 1;
                 }
 
-                if(isvalid_ship_point(start, end, ship_num[i][0], ship_map)){
+                if(isvalid_ship_point(start, end, ShipInfo[i].len, ship_map)){
                     ship new_ship;        //create new node
-                    new_ship.len = ship_num[i][0];
+                    new_ship.len = ShipInfo[i].len;
                     new_ship.destroy = 0;
                     new_ship.start = start;
                     new_ship.end = end;
@@ -292,7 +318,7 @@ point shot(char shot_map[row][col],struct node ** ships_list, int turn){
                         for(int j = curr->info.start.y; j <= curr->info.end.y ; j++)
                             shot_map[i][j] = 'C';
                     delete_node(ships_list, curr);                         //edit for first node!!!
-                    score[turn] += (1 + ship_score[curr->info.len]);       //score for complete destruction of shops
+                    score[turn] += (1 + ShipInfo[curr->info.len].score);       //score for complete destruction of shops
 
                     return p;
 
@@ -344,44 +370,68 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
         }
     }
 }
+
+void each_ship_score(ship_info ShipInfo){
+    
+}
+
 void setting (){
     printf("1)ships\n2)map size\n");
     int choice;
     scanf("%d", &choice);
     system("cls");
-    switch (choice)
-    {
-    case 1:
-        for(int j = 0; j < 4; j++){
-            printf("Enter number of ships with len = %d:\n", ship_num[j][0]);
-            scanf("%d", &ship_num[j][1]);
-            Sleep(500);
+    if(choice == 1){  
+        printf("Enter info:\n");               //try to improve!                                                         //ships
+        ShipInfo =(ship_info *) malloc(sizeof(ship_info));
+        number = 1;
+        int max = 0;
+        char done;
+        do{
+            ShipInfo =(ship_info *) realloc(ShipInfo,number * sizeof(ship_info));
+            printf("Enter new len: ");
+            scanf("%d" , &ShipInfo[number - 1].len );
+
+            printf("Enter number of ships with len %d: ", ShipInfo[number - 1].len);
+            scanf("%d" , &ShipInfo[number - 1].num);
+
+            if (max > ShipInfo[number - 1].len)
+                max = ShipInfo[number - 1].len;
+            number ++;
+
+            getchar();
+            printf("done?(y/n) ");
+            scanf("%c", &done);
+
+            Sleep(200);
             system("cls");
-        }
-        break;
-    case 2:
+        }while(done == 'n');
+        getchar();
+
+        for(int i = 0; i < number; i++)
+            ShipInfo[i].score = 5 * max / ShipInfo[i].len;
+    }
+    else if(choice == 2){
         printf("Enter # of rows: \n");
         scanf("%d", &row);
         printf("Enter # of columns: \n");
         scanf("%d", &col);
         Sleep(500);
         system("cls");
-        break;
+     }
 
-    default:
-        printf("Wrong choice!");
+    else{
+        printf("Wrong choice! Try again\n");
     }
 
 }
-void each_ship_score(int ship_score[]){
 
-}
 void player_setting(struct node ** ships_list, char ship_map[row][col], char * name){
-    //printf("\t1) choose user\n\t2) put ships\n\t3) done!\n");
-    int choice1 = 0, choice2;
-    //scanf("%d", &choice1);
-    while(choice1 != 3){
-        printf("1) choose user\n2) put ships\n3) done!\n");
+    
+    int choice1 = 0, choice2, n = 0;                                                                // n is for checking if the user enter both ships and nameor not
+    char IsOkay;                                                                                //to check if the Auto map is satisfying or not?
+    
+    while(n != 2){
+        printf("1) choose user\n2) put ships\n");
         scanf("%d", &choice1);
         system("cls");
         switch (choice1)
@@ -404,6 +454,8 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
             default:
                 break;
             }
+
+            n ++;
             break;
 
         case 2:
@@ -413,16 +465,21 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
             system("cls");
             switch (choice2)
             {
-            case 1:                     
-                get_ships_auto(ships_list,ship_map);
+            case 1:
+                do{                     
+                    get_ships_auto(ships_list,ship_map);
+                    printf("Is it okay?(y/n) ");
+                    IsOkay = getchar();
+                }while(IsOkay == 'n');
                 break;
             case 2:
                 get_ships(ships_list, ship_map);
 
-        case 3:
-        choice1 = 3;
+            n ++;
             break;
+            
         default:
+            printf("Wrong choice! Try agian\n");
             break;
             }
         }
@@ -434,19 +491,22 @@ void menu_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
     while(choice != 7){
         menu();
         scanf("%d", &choice);
+        printf("your choice is %d \n", choice);
         system("cls");
         switch (choice)
         {
-        case 1:                                                 //play with a friend
+        case 1:                                                                                              //play with a friend
             printf("First player:\n");
             player_setting(ships_list_1, ship_map_1, name_1);
             printf("Second player:\n");
             player_setting(ships_list_2, ship_map_2, name_2);
+            shot_loop(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
             break;
         case 2:
             printf("First player:\n");
             player_setting(ships_list_1,ship_map_1,name_1);                                                 //play with a bot
             get_ships_auto(ships_list_2, ship_map_2);
+            shot_loop(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
             break;
         case 3:                                                 //load gmae                                 -->fil
             break;
@@ -457,9 +517,10 @@ void menu_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             break;
         case 6:                                                 //score board                               -->file
             break;
-        case 7:                                                 //exit
+        case 7:
             break;
         default:
+            printf("Wrong choice! Try agian\n");
             break;
         }
     }
@@ -470,7 +531,7 @@ int main(){
     
     help();
     menu_loop(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
-    shot_loop(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
+    printf("bye!");
     /*for(int i =0 ; i<row;i++){
         for(int j =0;j<col;j++)
         printf("%d ", ship_map_1[i][j]);
