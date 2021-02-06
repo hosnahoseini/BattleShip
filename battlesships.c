@@ -245,7 +245,11 @@ void get_ships(struct node **ships_list, char ship_map[row][col]){
 
 void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
 
-    
+    (*ships_list) = NULL;                                                       //delete previous one!
+                    
+    for(int i = 0; i < row; i ++)
+        for(int j = 0; j < col; j ++)
+            ship_map[i][j] = '\0';
     int ship_index = 1;
     time_t t=time(NULL);
     srand(t);
@@ -295,14 +299,15 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
     }
     show_map(ship_map);
 }
-
-point shot(char shot_map[row][col],struct node ** ships_list, int turn){
-    point p;
-    char p_y;
-    printf("Enter your shot: ");
-    scanf("%d %c", &p.x,&p_y);
-    p.y = p_y - 'A';
-    (p.x)--;
+void save(){
+    char save;
+    printf("Do you want to save the game? ");
+    scanf("%c", &save);
+    if (save == 'y'){
+        
+    }
+}
+void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){ 
     
     if (shot_map[p.x][p.y] == '\0'){
         
@@ -328,38 +333,47 @@ point shot(char shot_map[row][col],struct node ** ships_list, int turn){
                         }
 
                     delete_node(ships_list, curr); 
-                    score[turn] += (1 + ShipTypeInfo[curr->info.len].score);       //score for complete destruction of shops
+                    score[turn % 2] += (1 + ShipTypeInfo[curr->info.len].score);       //score for complete destruction of shops
 
-                    return p;
+                    return;
 
                     
                 }
                 shot_map[p.x][p.y] = 'E';
                 score[turn] ++;                                           //one point for each successful shot
-                return p;
+                return;
             }
             curr = curr->next;
 
         }
         shot_map[p.x][p.y] = 'W';
-        return p;
+        return;
     }
     else
         printf("wrong point !\n");                                                  //was chosen=) already
 }
 
-void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
+void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     int turn = 0;
     point p;
+    char p_y;
     while(*ships_list_1 != NULL && *ships_list_2 != NULL){
         if(turn % 2 == 0){
             do
             {
                 show_map(shot_map_1);
+
                 printf("%s is your turn:\n", name[turn % 2]);
-                p = shot(shot_map_1, ships_list_2, turn);
+                //save();
+                printf("Enter your shot: ");
+                scanf("%d %c", &p.x,&p_y);
+                system("cls");
+                p.y = p_y - 'A';
+                (p.x)--;
+
+                shot(shot_map_1, ships_list_2, turn, p);
                 show_map(shot_map_1);
-                printf("score = %d\n", score[turn % 2]);
+                printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
             } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
             printf("next\n");
             turn ++;
@@ -369,12 +383,69 @@ void shot_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
              do
             {
                 show_map(shot_map_2);
-                printf("%s is your turn:\n",name[turn % 2]);
-                p = shot(shot_map_2, ships_list_1, turn);
+
+                printf("%s is your turn:\n", name[turn % 2]);
+                //save();
+                printf("Enter your shot: ");
+                scanf("%d %c", &p.x,&p_y);
+                system("cls");
+                p.y = p_y - 'A';
+                (p.x)--;
+
+                shot(shot_map_2, ships_list_1, turn, p);
                 show_map(shot_map_2);
-                printf("score = %d\n", score[turn % 2]);
+                Sleep(500);
+                printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
             } while (shot_map_2[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
             printf("next\n");
+            turn ++;
+            
+        }
+    }
+    printf("%s wins!!!\n",name[(turn-1) % 2] );
+}
+
+void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
+    int turn = 0;
+    point p;
+    char p_y;
+    time_t t=time(NULL);
+    srand(t);
+    while(*ships_list_1 != NULL && *ships_list_2 != NULL){
+        if(turn % 2 == 0){
+            do
+            {
+                show_map(shot_map_1);
+
+                printf("%s is your turn:\n", name[turn % 2]);
+                //save();
+                printf("Enter your shot: ");
+                scanf("%d %c", &p.x,&p_y);
+                p.y = p_y - 'A';
+                (p.x)--;
+
+                shot(shot_map_1, ships_list_2, turn, p);
+                show_map(shot_map_1);
+                printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
+            } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
+            
+            turn ++;
+        }
+        else
+        {
+             do
+            {
+                do
+                {
+                    p.x = rand() % col;
+                    p.y = rand() % row;
+                } while (shot_map_2[p.x][p.y] != '\0');
+
+                shot(shot_map_2, ships_list_1, turn, p);
+                show_map(shot_map_2);
+                printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
+            } while (shot_map_2[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
+            
             turn ++;
             
         }
@@ -478,12 +549,6 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
             {
             case 1:
                 do{ 
-                    (*ships_list) = NULL;                                                       //delete previous one!
-                    
-                    for(int i = 0; i < row; i ++)
-                        for(int j = 0; j < col; j ++)
-                            ship_map[i][j] = '\0';
-
                     get_ships_auto(ships_list,ship_map);
                     printf("Is it okay?(y/n) : ");
                     scanf(" %c", &IsOkay);
@@ -522,7 +587,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             player_setting(ships_list_1, ship_map_1, name[0]);
             printf("Second player:\n");
             player_setting(ships_list_2, ship_map_2, name[1]);
-            shot_loop(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
+            shot_loop_players(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
 
             printf("Do you want to play again?(y/n): ");
             scanf(" %c", &PlayAgain);
@@ -532,8 +597,9 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
         case 2:
             printf("First player:\n");
             player_setting(ships_list_1,ship_map_1,name[0]);                                                 //play with a bot
+            strcpy(name[1] , "bot");
             get_ships_auto(ships_list_2, ship_map_2);
-            shot_loop(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
+            shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
             break;
         case 3:                                                   //load gmae                                 -->fil;
             break;
