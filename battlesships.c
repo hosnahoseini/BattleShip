@@ -299,15 +299,64 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
     }
     show_map(ship_map);
 }
+
+int getLinkedListSize(struct node * list){
+    int cnt = 0;
+    struct node * curr = list;
+    while(curr != NULL){
+        curr = curr -> next;
+        cnt ++;
+    }
+    return cnt;
+}
 void save(){
     char save;
+    char filename[100];
     printf("Do you want to save the game? ");
-    scanf("%c", &save);
+    scanf(" %c", &save);
     if (save == 'y'){
+        printf("Enter game name: ");
+        scanf(" %s", filename);
+        strcat(filename,".bin");
+        FILE * fp = fopen(filename,"wb");
+
+        fwrite(&row, sizeof(int), 1, fp);
+        fwrite(&col, sizeof(int), 1, fp);
+        fwrite(&name[0], sizeof(name[0]), 1, fp);
+        fwrite(&name[1], sizeof(name[1]), 1, fp);
+        fwrite(&score[0], sizeof(score[0]), 1, fp);
+        fwrite(&score[1], sizeof(score[1]), 1, fp);
+
+        for(int i = 0;i < number; i ++){
+            fwrite(&(ShipTypeInfo[i].len), sizeof(int), 1, fp);
+            fwrite(&(ShipTypeInfo[i].num), sizeof(int), 1, fp);
+            fwrite(&(ShipTypeInfo[i].score), sizeof(int), 1, fp);
+        }
+
+        fwrite(&(shot_map_1), sizeof(shot_map_1), 1, fp);
+        fwrite(&(shot_map_2), sizeof(shot_map_2), 1, fp);
+
+        int ListSize1 = getLinkedListSize(ships_list_1);
+        int ListSize2 = getLinkedListSize(ships_list_2);
+        fwrite(&ListSize1, sizeof(int), 1, fp);
+        fwrite(&ListSize2, sizeof(int), 1, fp);
+
+        struct node * curr = ships_list_1;
+        while (curr != NULL) {
+            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            curr = curr->next;
+            }
+        curr = ships_list_2;
+        while (curr != NULL) {
+            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            curr = curr->next;
+            }
+        
+        fclose(fp);
         
     }
 }
-void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){ 
+void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){                                    //apply changes
     
     if (shot_map[p.x][p.y] == '\0'){
         
@@ -364,7 +413,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 show_map(shot_map_1);
 
                 printf("%s is your turn:\n", name[turn % 2]);
-                //save();
+                save();
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -385,7 +434,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 show_map(shot_map_2);
 
                 printf("%s is your turn:\n", name[turn % 2]);
-                //save();
+                save();
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -418,7 +467,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
                 show_map(shot_map_1);
 
                 printf("%s is your turn:\n", name[turn % 2]);
-                //save();
+                save();
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 p.y = p_y - 'A';
@@ -509,7 +558,7 @@ void setting (){
 void player_setting(struct node ** ships_list, char ship_map[row][col], char * name){
     
     int choice1 = 0, choice2, n = 0;                                                                // n is for checking if the user enter both ships and nameor not
-    char IsOkay;                                                                                //to check if the Auto map is satisfying or not?
+    char IsOkay;                                                                                    //to check if the Auto map is satisfying or not?
     
     while(n != 2){
         printf("1) choose user\n2) put ships\n");
@@ -543,7 +592,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
            
             printf("1) Auto\n2) Manual\n");
             scanf("%d", &choice2);
-            //system("cls");
+            system("cls");
             
             switch (choice2)
             {
@@ -576,7 +625,6 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
     while(choice != 7){
         menu();
         scanf("%d", &choice);
-        //printf("your choice is %d \n", choice);
         Sleep(500);
         system("cls");
         switch (choice)
