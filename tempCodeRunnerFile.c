@@ -1,2 +1,1 @@
-
-    shot_loop(&ships_list,NULL,s
+get_ships_auto(

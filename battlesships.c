@@ -46,7 +46,7 @@ struct node * ships_list_1 = NULL,* ships_list_2 = NULL;
 char name[2][100];
 int score[2];                                                               //scores of two players save here --> score[0] = player one scores & score[1] = player 2 scores
 ship_info *ShipTypeInfo;                                                        //len, number, scores of each ship type
-int number;                                                             //number of ships type
+int number = 4;                                                             //number of ships type
 
 //linked list functions
 
@@ -115,8 +115,6 @@ void menu (){
 
 void init_ship_info (ship_info *ShipTypeInfo){
 
-    number = 4;
-    ShipTypeInfo = (ship_info*) malloc(number * sizeof(ship_info));
     ShipTypeInfo[0].len = 1;
     ShipTypeInfo[0].num = 4;
     ShipTypeInfo[0].score = 25;
@@ -247,13 +245,14 @@ void get_ships(struct node **ships_list, char ship_map[row][col]){
 
 void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
 
+    
     int ship_index = 1;
     time_t t=time(NULL);
     srand(t);
     for (int i = 0; i < number; i++)                                               //loop for differrnt len
     {
         //Info of ships with len ShipTypeInfo[i].len
-        for (int j = 0; j < ShipTypeInfo[i].num; j++)                             //loop for ships with same len
+        for (int j = 0; j < ShipTypeInfo[i].num; j++)                            //loop for ships with same len
         {
 
             int IsValid = 0;                                                 //for cheking validation of points
@@ -478,7 +477,13 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
             switch (choice2)
             {
             case 1:
-                do{                     
+                do{ 
+                    (*ships_list) = NULL;                                                       //delete previous one!
+                    
+                    for(int i = 0; i < row; i ++)
+                        for(int j = 0; j < col; j ++)
+                            ship_map[i][j] = '\0';
+
                     get_ships_auto(ships_list,ship_map);
                     printf("Is it okay?(y/n) : ");
                     scanf(" %c", &IsOkay);
@@ -502,13 +507,13 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
 }
 void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     
-    int choice = 0;
+    int choice = 0,PlayAgain;
     while(choice != 7){
         menu();
         scanf("%d", &choice);
         //printf("your choice is %d \n", choice);
-        //Sleep(500);
-        //system("cls");
+        Sleep(500);
+        system("cls");
         switch (choice)
         {
         case 1:
@@ -518,7 +523,11 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             printf("Second player:\n");
             player_setting(ships_list_2, ship_map_2, name[1]);
             shot_loop(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
-            //choice = 7;
+
+            printf("Do you want to play again?(y/n): ");
+            scanf(" %c", &PlayAgain);
+            choice = PlayAgain == 'n' ? 7 : 1;
+
             break;
         case 2:
             printf("First player:\n");
@@ -548,24 +557,10 @@ int main(){
     
     
     help();
+    ShipTypeInfo = (ship_info*) malloc(number * sizeof(ship_info));
     init_ship_info(ShipTypeInfo);
     
     game_loop(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
     printf("bye!");
-    /*for(int i =0 ; i<row;i++){
-        for(int j =0;j<col;j++)
-        printf("%d ", ship_map_1[i][j]);
-        printf("\n");
-    }*/
-    //printf("----------------");
-    /*get_ships_auto(&ships_list,ship_map_1);
-    for(int i =0 ; i<row;i++){
-        for(int j =0;j<col;j++)
-        printf("%d ", ship_map_1[i][j]);
-        printf("\n");
-    }
-    
-    shot_loop(&ships_list,NULL,shot_map_1,shot_map_1);
-    show_map(shot_map_1);*/
 
 }
