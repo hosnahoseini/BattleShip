@@ -4,7 +4,6 @@
 #include<math.h>
 #include<time.h>
 #include<windows.h>
-
 #define COL 10
 #define ROW 10
 
@@ -47,7 +46,7 @@ char name[2][100];
 int score[2];                                                               //scores of two players save here --> score[0] = player one scores & score[1] = player 2 scores
 ship_info *ShipTypeInfo;                                                        //len, number, scores of each ship type
 int number = 4;                                                             //number of ships type
-
+int players;                                                               // if players == 1 --> play with bot //if players == 2 --> play with friends
 //linked list functions
 
 struct node * create_node(ship ship_info){
@@ -154,6 +153,201 @@ void show_map(char map[row][col]){
     }
 }
 
+// save
+FILE * search_in_players(char name[100]){
+    FILE * fp = fopen("score.bin","r+b");
+    if(fp == NULL)
+        return NULL;
+    char file_name [100];
+    while (feof(fp) == 0)
+    {
+
+        fread(file_name, sizeof(char), 100, fp);
+        if(strcmp(name, file_name) == 0){
+            return fp;
+        }
+        if(feof(fp))
+            break;
+        fseek(fp, sizeof(int), SEEK_CUR);
+        
+    }
+    fclose(fp);
+    //printf(":(\n");
+    return NULL;
+}
+void save_score(char name[100], int score){
+    FILE * fp = search_in_players(name);
+    
+    if(fp != NULL){
+        //fseek(fp, search_in_players(name), SEEK_SET);
+        int file_score;
+        fread(&file_score, sizeof(int), 1, fp);
+        score += file_score;
+        fseek(fp, -1 * sizeof(int), SEEK_CUR);
+        fwrite(&score,sizeof(int), 1, fp);
+        fclose(fp);
+    }
+    else
+    {
+        //printf("HERE!\n");
+        fp = fopen("score.bin","ab");
+        fwrite(name, sizeof(char), 100, fp);
+        fwrite(&score, sizeof(int), 1, fp);
+        //cnt ++;
+        fclose(fp);
+    }
+    
+}
+void score_board(){
+    FILE * fp = fopen("score.bin","rb");
+    char name [100];
+    int score;
+    printf("|          name           | score |\n");
+    printf("-----------------------------------\n");
+    while (1)
+    {
+       
+        fread(name, sizeof(char), 100, fp);
+        fread(&score, sizeof(int), 1, fp);
+         if (feof(fp))
+            break;
+        printf("|          %-15s|   %4d|\n", name, score);
+    }
+    printf("press enter to go back to menu: ");
+    fflush(stdin);
+    getchar();
+    system("cls");
+    fclose(fp);
+    
+}
+int getLinkedListSize(struct node * list){
+    int cnt = 0;
+    struct node * curr = list;
+    while(curr != NULL){
+        curr = curr -> next;
+        cnt ++;
+    }
+    return cnt;
+}
+
+void save(){
+    char save;
+    //char filename[100];
+    printf("Do you want to save the game? ");
+    scanf(" %c", &save);
+    if (save == 'y'){
+        //printf("Enter game name: ");
+        //scanf(" %s", filename);
+        //strcat(filename,".bin");
+        if (players == 2){
+            save_score(name[0], score[0]);
+            save_score(name[1], score[1]);
+        }
+        else
+            save_score(name[0], score[0]);
+
+        FILE * fp = fopen("load.bin","ab");
+
+        fwrite(name,sizeof(char), 100 * 2, fp);
+
+        fwrite(&row, sizeof(int), 1, fp);
+        fwrite(&col, sizeof(int), 1, fp);
+
+        fwrite(&number, sizeof(int), 1, fp);
+
+        fwrite(&score, sizeof(int), 2 * 1, fp);
+        
+        int ListSize1 = getLinkedListSize(ships_list_1);
+        int ListSize2 = getLinkedListSize(ships_list_2);
+        fwrite(&ListSize1, sizeof(int), 1, fp);
+        fwrite(&ListSize2, sizeof(int), 1, fp);
+
+        fwrite(ShipTypeInfo, sizeof(ship_info), number, fp);
+
+        fwrite(shot_map_1, sizeof(char), row * col, fp);
+        fwrite(shot_map_2, sizeof(char), row * col, fp);
+
+        struct node * curr = ships_list_1;
+        while (curr != NULL) {
+            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            curr = curr->next;
+            }
+
+        curr = ships_list_2;
+        while (curr != NULL) {
+            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            curr = curr->next;
+            }
+        fwrite(&players, sizeof(int), 1, fp);
+        fclose(fp);
+        
+    }
+}
+void print_game(){
+    FILE * fp = fopen("load.bin", "rb");
+    char load_name [2][100];
+    int len;
+    while (1)
+    {
+        if(feof(fp))
+            break;
+
+        fread(load_name, sizeof(char), 100 * 2, fp);
+        printf("|%2d|%25s vs %25s|", load_name[0], load_name[1]);
+        fread(&row, sizeof(int), 1, fp);
+        fread(&col, sizeof(int), 1, fp);
+
+        fread(&number, sizeof(int), 1, fp);
+
+        int ListSize1 ;
+        int ListSize2 ;
+        fread(&ListSize1, sizeof(int), 1, fp);
+        fread(&ListSize2, sizeof(int), 1, fp);
+        len = ((sizeof(int) * row * col) * 2) + sizeof(int) * 3 + number * sizeof(ship_info) + sizeof(ship) * (ListSize1 + ListSize2);
+        fseek(fp, len, SEEK_CUR);
+
+    }
+    
+}
+void load(){
+        FILE * fp = fopen("load.bin","rb");
+
+        fread(name,sizeof(char), 100 * 2, fp);
+
+        fread(&row, sizeof(int), 1, fp);
+        fread(&col, sizeof(int), 1, fp);
+
+        fread(&number, sizeof(int), 1, fp);
+
+        int ListSize1 ;
+        int ListSize2 ;
+        fread(&ListSize1, sizeof(int), 1, fp);
+        fread(&ListSize2, sizeof(int), 1, fp);
+
+        fread(&score, sizeof(int), 2 * 1, fp);
+
+        ShipTypeInfo = malloc(sizeof(ship_info) * number);
+        fread(ShipTypeInfo, sizeof(ship_info), number, fp);
+    
+        fread(shot_map_1, sizeof(char), row * col, fp);
+        fread(shot_map_2, sizeof(char), row * col, fp);
+
+        ship new_info;
+        for(int i =0 ;i< ListSize1; i++){
+            fread(&new_info, sizeof(ship), 1, fp);
+            add_end(&ships_list_1,create_node(new_info));
+        }
+
+        for(int i =0 ;i< ListSize1; i++){
+            fread(&new_info, sizeof(ship), 1, fp);
+            add_end(&ships_list_2,create_node(new_info));
+        }
+        fread(&players, sizeof(int), 1, fp);
+        
+        fclose(fp);
+    
+}
+//
 void swap(point *p1, point *p2){
     point tmp = *p1;
     *p1 = *p2;
@@ -303,67 +497,6 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
     
 }
 
-int getLinkedListSize(struct node * list){
-    int cnt = 0;
-    struct node * curr = list;
-    while(curr != NULL){
-        curr = curr -> next;
-        cnt ++;
-    }
-    return cnt;
-}
-void save(){
-    char save;
-    //char filename[100];
-    printf("Do you want to save the game? ");
-    scanf(" %c", &save);
-    if (save == 'y'){
-        //printf("Enter game name: ");
-        //scanf(" %s", filename);
-        //strcat(filename,".bin");
-        FILE * fp = fopen("load.bin","ab");
-
-        fwrite(&name[0], 100 * sizeof(char), 1, fp);
-        fwrite(&name[1], 100 * sizeof(char), 1, fp);
-
-        fwrite(&row, sizeof(int), 1, fp);
-        fwrite(&col, sizeof(int), 1, fp);
-
-        fwrite(&score[0], sizeof(int), 1, fp);
-        fwrite(&score[1], sizeof(int), 1, fp);
-
-        fwrite(&number, sizeof(int), 1, fp);
-        for(int i = 0;i < number; i ++){
-            fwrite(&(ShipTypeInfo[i].len), sizeof(int), 1, fp);
-            fwrite(&(ShipTypeInfo[i].num), sizeof(int), 1, fp);
-            fwrite(&(ShipTypeInfo[i].score), sizeof(int), 1, fp);
-        }
-
-        fwrite(&(shot_map_1), sizeof(shot_map_1), 1, fp);
-        fwrite(&(shot_map_2), sizeof(shot_map_2), 1, fp);
-
-        int ListSize1 = getLinkedListSize(ships_list_1);
-        int ListSize2 = getLinkedListSize(ships_list_2);
-        fwrite(&ListSize1, sizeof(int), 1, fp);
-        fwrite(&ListSize2, sizeof(int), 1, fp);
-
-        struct node * curr = ships_list_1;
-        while (curr != NULL) {
-            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
-            curr = curr->next;
-            }
-        curr = ships_list_2;
-        while (curr != NULL) {
-            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
-            curr = curr->next;
-            }
-        
-        fclose(fp);
-        
-    }
-}
-
-void load_game()
 void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){                                    //apply changes
     
     if (shot_map[p.x][p.y] == '\0'){
@@ -444,7 +577,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 show_map(shot_map_2);
 
                 printf("%s is your turn:\n", name[turn % 2]);
-                //save();
+                save();
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -479,7 +612,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
             {
                 show_map(shot_map_1);
                 printf("%s is your turn:\n", name[turn % 2]);
-                //save();
+                save();
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -637,7 +770,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
            
             printf("1) Auto\n2) Manual\n");
             scanf("%d", &choice2);
-            system("cls");
+            //system("cls");
             
             switch (choice2)
             {
@@ -666,34 +799,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
         }
     }
 }
-void save_score(char name[100], int score){
-    FILE * fp = fopen("score.bin","ab");
-    fwrite(name, sizeof(char), 100, fp);
-    fwrite(&score, sizeof(int), 1, fp);
-    fclose(fp);
-}
 
-void score_board(){
-    FILE * fp = fopen("score.bin","rb");
-    char name [100];
-    int score;
-    printf("|          name           | score |\n");
-    printf("-----------------------------------\n");
-    while (1)
-    {
-        if (feof(fp))
-            break;
-        fread(name, sizeof(char), 100, fp);
-        fread(&score, sizeof(int), 1, fp);
-        printf("|          %-15s|   %4d|\n", name, score);
-    }
-    printf("press enter to go back to menu: ");
-    fflush(stdin);
-    getchar();
-    system("cls");
-    fclose(fp);
-    
-}
 void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     
     int choice = 0,PlayAgain;
@@ -705,7 +811,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
         switch (choice)
         {
         case 1:
-                                                                                                       //play with a friend
+             players = 2;                                                                                          //play with a friend
             printf("First player:\n");
             player_setting(ships_list_1, ship_map_1, name[0]);
             printf("Second player:\n");
@@ -720,6 +826,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
 
             break;
         case 2:
+            players = 1;
             printf("First player:\n");
             player_setting(ships_list_1,ship_map_1,name[0]);                                                 //play with a bot
             strcpy(name[1] , "bot");
@@ -729,7 +836,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             save_score(name[0], score[0]);
             break;
         case 3:                                                  //load gmae                                 -->fil;
-            
+            print_game();
             break;
         case 4:                                                 //load last gmae                            -->file
             break;
