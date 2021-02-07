@@ -230,25 +230,8 @@ int getLinkedListSize(struct node * list){
     return cnt;
 }
 
-void save(){
-    char save;
-    //char filename[100];
-    printf("Do you want to save the game? ");
-    scanf(" %c", &save);
-    if (save == 'y'){
-        //printf("Enter game name: ");
-        //scanf(" %s", filename);
-        //strcat(filename,".bin");
-        if (players == 2){
-            save_score(name[0], score[0]);
-            save_score(name[1], score[1]);
-        }
-        else
-            save_score(name[0], score[0]);
-
-        FILE * fp = fopen("load.bin","ab");
-
-        fwrite(name,sizeof(char), 100 * 2, fp);
+void write_info_in_file(FILE * fp){
+    fwrite(name,sizeof(char), 100 * 2, fp);
 
         fwrite(&row, sizeof(int), 1, fp);
         fwrite(&col, sizeof(int), 1, fp);
@@ -279,38 +262,75 @@ void save(){
             curr = curr->next;
             }
         fwrite(&players, sizeof(int), 1, fp);
-        fclose(fp);
+}
+void save(){
+    char save;
+    char filename[100];
+    printf("Do you want to save the game? ");
+    scanf(" %c", &save);
+    if (save == 'y'){
+        printf("Enter game name: ");
+        scanf(" %s", filename);
+
+        FILE * files = fopen("filesname.bin","ab");
+        if(files == NULL)
+            files = fopen("filesname.bin","wb");
+
+        fwrite(filename, sizeof(char), 100, files);
+
+        fclose(files);
+        strcat(filename,".bin");
+        
+        FILE * last = fopen("last.bin","wb");
+        FILE * new = fopen(filename,"wb");
+        //write_info_in_file(last);
+        //write_info_in_file(new);
+        fclose(last);
+        fclose(new);
+    }
+}
+char * print_game(){
+    
+    FILE * fp = fopen("filesname.bin", "rb");
+    char *game_name;
+    int cnt = 0;
+    while (1)
+    {   
+          
+        fread(game_name, sizeof(char), 100, fp);
+        cnt ++;
+        if(feof(fp))
+            break;   
+        printf("|%2d|%25s|\n", cnt, game_name);
+        
         
     }
+    printf("Enter name of the game which you want to play: ");
+    scanf(" %s", &game_name);
+    return game_name;
 }
-void print_game(){
-    FILE * fp = fopen("load.bin", "rb");
-    char load_name [2][100];
-    int len;
+char * print_game(){
+    
+    FILE * fp = fopen("filesname.bin", "rb");
+    char *game_name;
+    int cnt = 0;
     while (1)
-    {
+    {        
+        fread(game_name, sizeof(char), 100, fp);
+        cnt ++;
+        printf("|%2d|%25s|\n", cnt, game_name);
         if(feof(fp))
             break;
-
-        fread(load_name, sizeof(char), 100 * 2, fp);
-        printf("|%2d|%25s vs %25s|", load_name[0], load_name[1]);
-        fread(&row, sizeof(int), 1, fp);
-        fread(&col, sizeof(int), 1, fp);
-
-        fread(&number, sizeof(int), 1, fp);
-
-        int ListSize1 ;
-        int ListSize2 ;
-        fread(&ListSize1, sizeof(int), 1, fp);
-        fread(&ListSize2, sizeof(int), 1, fp);
-        len = ((sizeof(int) * row * col) * 2) + sizeof(int) * 3 + number * sizeof(ship_info) + sizeof(ship) * (ListSize1 + ListSize2);
-        fseek(fp, len, SEEK_CUR);
-
+        
     }
-    
+    printf("Enter name of the game which you want to play: ");
+    scanf(" %s", game_name);
+    return game_name;
 }
-void load(){
-        FILE * fp = fopen("load.bin","rb");
+void load(char * game_name){
+        strcat(game_name,".bin");
+        puts(game_name);
+        FILE * fp = fopen(game_name,"rb");
 
         fread(name,sizeof(char), 100 * 2, fp);
 
@@ -803,6 +823,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
 void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     
     int choice = 0,PlayAgain;
+    char * game_name;
     while(choice != 7){
         menu();
         scanf("%d", &choice);
@@ -836,9 +857,19 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             save_score(name[0], score[0]);
             break;
         case 3:                                                  //load gmae                                 -->fil;
-            print_game();
+            game_name = print_game();
+            load(game_name);
+            if(players == 2)
+                choice = 1;
+            else
+                choice = 2;
             break;
-        case 4:                                                 //load last gmae                            -->file
+        case 4:
+            load("last");
+            if(players == 2)
+                choice = 1;
+            else
+                choice = 2;                                                 //load last gmae                            -->file
             break;
         case 5:                                                 //setting
             setting();
