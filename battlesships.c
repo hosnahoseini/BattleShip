@@ -291,13 +291,13 @@ void write_info_in_file(FILE * fp){
 
         struct node * curr = ships_list_1;
         while (curr != NULL) {
-            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            fwrite(&(curr->info), sizeof(curr->info), 1, fp);
             curr = curr->next;
             }
 
         curr = ships_list_2;
         while (curr != NULL) {
-            fwrite(&(curr->info), 1, sizeof(curr->info), fp);
+            fwrite(&(curr->info), sizeof(curr->info), 1, fp);
             curr = curr->next;
             }
         fwrite(&players, sizeof(int), 1, fp);
@@ -321,11 +321,11 @@ void save(){
         fclose(files);
         strcat(filename,".bin");
         
-        FILE * last = fopen("last.bin","wb");
+        //FILE * last = fopen("last.bin","wb");
         FILE * new = fopen(filename,"wb");
-        write_info_in_file(last);
+        //write_info_in_file(last);
         write_info_in_file(new);
-        fclose(last);
+        //fclose(last);
         fclose(new);
     }
 }
@@ -356,42 +356,44 @@ char * print_game(){
 void load(char * game_name){
         strcat(game_name,".bin");
         puts(game_name);
+
         FILE * fp = fopen(game_name,"rb");
-        printf("1\n");
+        //printf("1\n");
         fread(name,sizeof(char), 100 * 2, fp);
-        printf("2\n");
+        //printf("2\n");
         fread(&row, sizeof(int), 1, fp);
         fread(&col, sizeof(int), 1, fp);
-        printf("3\n");
+        //printf("3\n");
         fread(&number, sizeof(int), 1, fp);
-        printf("4\n");
+        //printf("4\n");
+        fread(&score, sizeof(int), 2 * 1, fp);
+        //printf("6\n");
         int ListSize1 ;
         int ListSize2 ;
         fread(&ListSize1, sizeof(int), 1, fp);
         fread(&ListSize2, sizeof(int), 1, fp);
-        printf("5\n");
-        fread(&score, sizeof(int), 2 * 1, fp);
-        printf("6\n");
+        //printf("5\n");
+        
         ShipTypeInfo = malloc(sizeof(ship_info) * number);
         fread(ShipTypeInfo, sizeof(ship_info), number, fp);
-        printf("7\n");
+        //printf("7\n");
         fread(shot_map_1, sizeof(char), row * col, fp);
         fread(shot_map_2, sizeof(char), row * col, fp);
-        printf("8\n");
+        //printf("8\n");
         //ships_list_1 = ships_list_2 = NULL;
         ship new_info;
         for(int i =0 ;i< ListSize1; i++){
             fread(&new_info, sizeof(ship), 1, fp);
             add_end(&ships_list_1,create_node(new_info));
         }
-        printf("8\n");
+        //printf("8\n");
         for(int i =0 ;i< ListSize2; i++){
             fread(&new_info, sizeof(ship), 1, fp);
             add_end(&ships_list_2,create_node(new_info));
         }
-        printf("9\n");
+        //printf("9\n");
         fread(&players, sizeof(int), 1, fp);
-        printf("10\n");
+        //printf("10\n");
         fread(&turn, sizeof(int), 1, fp);
         fclose(fp);
     
@@ -550,7 +552,7 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
 
 void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){                                    //apply changes
     
-    if (shot_map[p.x][p.y] == '\0'){
+    if (shot_map[p.x][p.y] == '\0' && p.x < col && p.x >= 0 && p.y < row && p.y >= 0){
         
         struct node *curr = *ships_list;
         while (curr != NULL)
@@ -618,8 +620,10 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
 
                 shot(shot_map_1, ships_list_2, turn, p);
                 show_map(shot_map_1);
+                Sleep(1000);
+                system("cls");
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(500);
+                Sleep(1000);
                 system("cls");
             } while (shot_map_1[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
             printf("next\n");
@@ -641,8 +645,10 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
 
                 shot(shot_map_2, ships_list_1, turn, p);
                 show_map(shot_map_2);
+                Sleep(1000);
+                system("cls");
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(500);
+                Sleep(1000);
                 system("cls");
             } while (shot_map_2[p.x][p.y] != 'W' && *ships_list_1 != NULL && *ships_list_2 != NULL);
             printf("next\n");
@@ -697,7 +703,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
 
                 shot(shot_map_2, ships_list_1, turn, p);
                 show_map(shot_map_2);
-                Sleep(500);
+                Sleep(1000);
                 system("cls");
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1000);
@@ -886,8 +892,8 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             
             save_score(name[0], score[0]);
             save_score(name[1], score[1]);
-            printf("%s score = %d\n%s score = %d", name[0], score[0], name[1], score[1]);
-
+            printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
+            getchar();
             break;
         case 2:
             players = 1;
@@ -903,8 +909,8 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
 
             save_score(name[0], score[0]);
-            printf("%s score = %d\n%s score = %d", name[0], score[0], name[1], score[1]);
-            
+            printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
+            getchar();
             break;
         case 3:                                                  //load gmae                                 -->fil;
             game_name = print_game();

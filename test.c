@@ -85,7 +85,7 @@ void write_info_in_file(FILE * fp){
         fwrite(&col, sizeof(int), 1, fp);
 
         fwrite(&number, sizeof(int), 1, fp);
-
+        
         fwrite(&score, sizeof(int), 2 * 1, fp);
         
         int ListSize1 = getLinkedListSize(ships_list_1);
@@ -187,7 +187,7 @@ void show_map(char map[row][col]){
 void load(/*char * game_name*/){
         //strcat(game_name,".bin");
         //puts(game_name);
-        FILE * fp = fopen("mb.bin","rb");
+        FILE * fp = fopen("hx2.bin","rb");
         printf("1\n");
         fread(name,sizeof(char), 100 * 2, fp);
         printf("%s %s\n", name[0],name[1]);
@@ -205,7 +205,8 @@ void load(/*char * game_name*/){
         printf("%d %d\n", score[0], score[1]);
         ShipTypeInfo = malloc(sizeof(ship_info) * number);
         fread(ShipTypeInfo, sizeof(ship_info), number, fp);
-        printf("7\n");
+        for(int i =0;i<number;i++)
+            printf("%d %d %d\n", ShipTypeInfo[i].len,ShipTypeInfo[i].num,ShipTypeInfo[i].score);
         fread(shot_map_1, sizeof(char), row * col, fp);
         fread(shot_map_2, sizeof(char), row * col, fp);
         show_map(shot_map_1);
@@ -223,8 +224,9 @@ void load(/*char * game_name*/){
         }
         print_list(ships_list_2);
         fread(&players, sizeof(int), 1, fp);
-        printf("10\n");
+        
         fread(&turn, sizeof(int), 1, fp);
+        printf("%d %d\n",players,turn);
         fclose(fp);
     
 }
@@ -232,6 +234,6 @@ int main(){
     //score_board();
     
     load();
-    print_list(ships_list_2);
+    print_list(ships_list_1);
 
 }
