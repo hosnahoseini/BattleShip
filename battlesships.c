@@ -4,6 +4,8 @@
 #include<math.h>
 #include<time.h>
 #include<windows.h>
+#include<string.h>
+
 #define COL 10
 #define ROW 10
 
@@ -39,7 +41,6 @@ typedef struct{
     int score;
 }score_board_info;
 //global variable
-
 
 int row = ROW,col = COL;
 char ship_map_1[ROW][COL];                                                    //it was declared here just because of init, in the main prog it shoul be in main;
@@ -195,12 +196,9 @@ void save_score(char name[100], int score){
 
     if(k != -1){
         FILE *fp = fopen("score.bin","r+b");
-        printf("%d",k);
         fseek(fp,k, SEEK_SET);
-        //int file_score;
         
         fwrite(&score,sizeof(int), 1, fp);
-        printf("%d", score);
         fclose(fp);
     }
     else
@@ -280,7 +278,7 @@ void score_board(){
         fread(&score, sizeof(int), 1, fp);
          if (feof(fp))
             break;
-        printf("|          %-15s|   %4d|\n", name, score);
+        printf("|          %-15s|   %-4d|\n", name, score);
     }
     printf("press enter to go back to menu: ");
     fflush(stdin);
@@ -340,7 +338,7 @@ int getLinkedListSize(struct node * list){
 }
 
 void write_info_in_file(FILE * fp){
-    fwrite(name,sizeof(char), 100 * 2, fp);
+        fwrite(name,sizeof(char), 100 * 2, fp);
 
         fwrite(&row, sizeof(int), 1, fp);
         fwrite(&col, sizeof(int), 1, fp);
@@ -352,7 +350,7 @@ void write_info_in_file(FILE * fp){
         int ListSize1 = getLinkedListSize(ships_list_1);
         
         int ListSize2 = getLinkedListSize(ships_list_2);
-        //printf("%d %d", ListSize1, ListSize2);
+
         fwrite(&ListSize1, sizeof(int), 1, fp);
         fwrite(&ListSize2, sizeof(int), 1, fp);
 
@@ -390,14 +388,15 @@ void save(){
         fclose(files);
         strcat(filename,".bin");
         
-        //FILE * last = fopen("last.bin","wb");
+        FILE * last = fopen("last.bin","wb");
         FILE * new = fopen(filename,"wb");
-        //write_info_in_file(last);
+        write_info_in_file(last);
         write_info_in_file(new);
-        //fclose(last);
+        fclose(last);
         fclose(new);
     //}
 }
+
 
 char * print_game(){
     
@@ -414,7 +413,7 @@ char * print_game(){
 
     char game_name[100];
     char *name_p = malloc(100 * sizeof(char));
-    static int cnt = 0;
+    int cnt = 0;
     while (1)
     {   
         
@@ -433,46 +432,45 @@ char * print_game(){
 }
 
 void load(char * game_name){
+    
         strcat(game_name,".bin");
-        puts(game_name);
-
+        
         FILE * fp = fopen(game_name,"rb");
-        //printf("1\n");
+        
         fread(name,sizeof(char), 100 * 2, fp);
-        //printf("2\n");
+        
         fread(&row, sizeof(int), 1, fp);
         fread(&col, sizeof(int), 1, fp);
-        //printf("3\n");
+        
         fread(&number, sizeof(int), 1, fp);
-        //printf("4\n");
+        
         fread(&score, sizeof(int), 2 * 1, fp);
-        //printf("6\n");
+        
         int ListSize1 ;
         int ListSize2 ;
         fread(&ListSize1, sizeof(int), 1, fp);
         fread(&ListSize2, sizeof(int), 1, fp);
-        //printf("5\n");
+        
         
         ShipTypeInfo = malloc(sizeof(ship_info) * number);
         fread(ShipTypeInfo, sizeof(ship_info), number, fp);
-        //printf("7\n");
+        
         fread(shot_map_1, sizeof(char), row * col, fp);
         fread(shot_map_2, sizeof(char), row * col, fp);
-        //printf("8\n");
-        //ships_list_1 = ships_list_2 = NULL;
+        
         ship new_info;
         for(int i =0 ;i< ListSize1; i++){
             fread(&new_info, sizeof(ship), 1, fp);
             add_end(&ships_list_1,create_node(new_info));
         }
-        //printf("8\n");
+        
         for(int i =0 ;i< ListSize2; i++){
             fread(&new_info, sizeof(ship), 1, fp);
             add_end(&ships_list_2,create_node(new_info));
         }
-        //printf("9\n");
+        
         fread(&players, sizeof(int), 1, fp);
-        //printf("10\n");
+        
         fread(&turn, sizeof(int), 1, fp);
         fclose(fp);
     
@@ -481,7 +479,6 @@ void in_game_menu(){
     char choice;
     char filename[100];
     printf("press \'s\' for save, press \'e\' for exit, press \'l\' for load other game, press any other key(except white space) to shot: ");
-    //scanf(" %c", &choice);
     fflush(stdin);
     choice = getchar();
     char* load_game;
@@ -901,7 +898,7 @@ void setting (){
         check = true;
         do{
             if(check == false)
-                printf("Wong!Try again\n");
+                printf("Wong! Try again\n");
             printf("Enter # of rows: \n");
             scanf("%d", &row);
             printf("Enter # of columns: \n");
@@ -982,8 +979,6 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
                 get_ships(ships_list, ship_map, name);
                 n ++;
                 break;
-
-            
             break;
             
         default:
@@ -998,6 +993,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
     
     int choice = 0,PlayAgain;
     char * game_name;
+    char last[10] = "last";
     while(1){
         menu();
         scanf("%d", &choice);
@@ -1062,7 +1058,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
                 break;
             }
         case 4:
-            load("last");
+            load(last);
             if(players == 2)
                 shot_loop_players(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
             else
@@ -1090,6 +1086,6 @@ int main(){
     init_ship_info(ShipTypeInfo);
     
     game_loop(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
-    printf("bye!");
+    
 
 }

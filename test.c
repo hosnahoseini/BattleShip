@@ -91,7 +91,7 @@ void score_board(){
 }
 
 int search_in_players(char name[100]){
-    FILE * fp = fopen("score copy.bin","r+b");
+    FILE * fp = fopen("score.bin","r+b");
     if(fp == NULL)
         return -1;
     
@@ -110,20 +110,12 @@ int search_in_players(char name[100]){
     fclose(fp);
     return -1;
 }
-/*void save_score(char name[100], int score){
-    
-        FILE * fp = fopen("score.bin","ab");
-        fwrite(name, sizeof(char), 100, fp);
-        fwrite(&score, sizeof(int), 1, fp);
-        fclose(fp);
-
-}*/
 void save_score(char name[100], int score){
     
     int k = search_in_players(name);
 
     if(k != -1){
-        FILE *fp = fopen("score copy.bin","r+b");
+        FILE *fp = fopen("score.bin","r+b");
         printf("%d",k);
         fseek(fp,k, SEEK_SET);
         //int file_score;
@@ -134,13 +126,59 @@ void save_score(char name[100], int score){
     }
     else
     {
-        FILE * fp = fopen("score copy.bin","ab");
+        FILE * fp = fopen("score.bin","ab");
         fwrite(name, sizeof(char), 100, fp);
         fwrite(&score, sizeof(int), 1, fp);
         fclose(fp);
     }
 }
+void load(char * game_name){
+        printf("here\n");
+        strcat(game_name,".bin");
+        printf("here\n");
+        puts(game_name);
+        printf("here");
+        FILE * fp = fopen(game_name,"rb");
+        //printf("1\n");
+        fread(name,sizeof(char), 100 * 2, fp);
+        //printf("2\n");
+        fread(&row, sizeof(int), 1, fp);
+        fread(&col, sizeof(int), 1, fp);
+        //printf("3\n");
+        fread(&number, sizeof(int), 1, fp);
+        //printf("4\n");
+        fread(&score, sizeof(int), 2 * 1, fp);
+        //printf("6\n");
+        int ListSize1 ;
+        int ListSize2 ;
+        fread(&ListSize1, sizeof(int), 1, fp);
+        fread(&ListSize2, sizeof(int), 1, fp);
+        //printf("5\n");
+        
+        ShipTypeInfo = malloc(sizeof(ship_info) * number);
+        fread(ShipTypeInfo, sizeof(ship_info), number, fp);
+        //printf("7\n");
+        fread(shot_map_1, sizeof(char), row * col, fp);
+        fread(shot_map_2, sizeof(char), row * col, fp);
+        //printf("8\n");
+        //ships_list_1 = ships_list_2 = NULL;
+        ship new_info;
+        for(int i =0 ;i< ListSize1; i++){
+            fread(&new_info, sizeof(ship), 1, fp);
+            add_end(&ships_list_1,create_node(new_info));
+        }
+        //printf("8\n");
+        for(int i =0 ;i< ListSize2; i++){
+            fread(&new_info, sizeof(ship), 1, fp);
+            add_end(&ships_list_2,create_node(new_info));
+        }
+        //printf("9\n");
+        fread(&players, sizeof(int), 1, fp);
+        //printf("10\n");
+        fread(&turn, sizeof(int), 1, fp);
+        fclose(fp);
+    
+}
 int main(){
-    save_score("1",100);
-    score_board();
+    load("last");
 }
