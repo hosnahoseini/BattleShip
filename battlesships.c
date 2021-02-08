@@ -33,6 +33,10 @@ typedef struct{
     int score;
 }ship_info;
 
+typedef struct{
+    char name [100];
+    int score;
+}score_board_info;
 //global variable
 
 
@@ -160,17 +164,17 @@ void empty_map(char shot_map[row][col]){
             shot_map[i][j] = '\0';
 }
 // save
-FILE * search_in_players(char name[100]){
+bool search_in_players(char name[100]){
     FILE * fp = fopen("score.bin","r+b");
     if(fp == NULL)
-        return NULL;
+        return false;
+    
     char file_name [100];
-    while (feof(fp) == 0)
+    while (1)
     {
-
         fread(file_name, sizeof(char), 100, fp);
         if(strcmp(name, file_name) == 0){
-            return fp;
+            return true;
         }
         if(feof(fp))
             break;
@@ -178,33 +182,62 @@ FILE * search_in_players(char name[100]){
         
     }
     fclose(fp);
-    //printf(":(\n");
-    return NULL;
+    return false;
 }
 void save_score(char name[100], int score){
-    //FILE * fp = search_in_players(name);
     
-    /*if(fp != NULL){
-        //fseek(fp, search_in_players(name), SEEK_SET);
-        int file_score;
-        fread(&file_score, sizeof(int), 1, fp);
-        score += file_score;
-        fseek(fp, -1 * sizeof(int), SEEK_CUR);
-        fwrite(&score,sizeof(int), 1, fp);
-        fclose(fp);
-    }
-    else
-    {*/
-        //printf("HERE!\n");
         FILE * fp = fopen("score.bin","ab");
         fwrite(name, sizeof(char), 100, fp);
         fwrite(&score, sizeof(int), 1, fp);
-        //cnt ++;
         fclose(fp);
-    //}
-    
+
 }
+int cmp(const void *i1, const void *i2){
+	int a =  ((score_board_info *)i1) ->score;
+	int b =  ((score_board_info *)i2) ->score;
+
+	return (a < b) ? 1 : (a == b) ? 0 : -1;
+}
+
+void sort_score(){
+
+    FILE * fp = fopen("score.bin", "rb");
+    score_board_info * score_info;
+    int n = 1;
+    score_info = (score_board_info *)malloc(sizeof(score_board_info));
+    fread(&(score_info[0].name), sizeof(char), 100, fp);
+    fread(&(score_info[0].score), sizeof(int), 1, fp);
+    
+    while (1)
+    {
+        n ++;
+        char name [100];
+        int score;
+        score_info = (score_board_info *)realloc(score_info, n * sizeof(score_board_info));
+        fread(name, sizeof(char), 100, fp);
+        fread(&(score), sizeof(int), 1, fp);
+        
+        if(feof(fp)){
+            n --;
+            break;
+        }
+        strcpy(score_info[n - 1].name ,name);
+        score_info[n - 1].score = score; 
+    }
+    fclose(fp);
+    
+    qsort(score_info, n, sizeof(score_board_info), cmp);
+    
+    FILE * fw = fopen("score.bin", "wb");
+    for (int i = 0; i < n; i++)
+    {
+        fwrite(&(score_info[i].name), sizeof(char), 100, fw);
+        fwrite(&(score_info[i].score), sizeof(int), 1, fw);
+    }
+    fclose(fw);
+}   
 void score_board(){
+    sort_score();
     FILE * fp = fopen("score.bin","rb");
     char name [100];
     int score;
@@ -399,13 +432,17 @@ void load(char * game_name){
     
 }
 //
-void swap(point *p1, point *p2){
+void swap_point(point *p1, point *p2){
     point tmp = *p1;
     *p1 = *p2;
     *p2 = *p1;
 }
 
 bool isvalid_ship_point(point start, point end, int len, char ship_map[row][col]){
+    if(end.x > col || start.x > col || end.y > row || start.y > row
+     ||end.x < 0 || start.x < 0 || end.y < 0 || start.y < 0)    
+        return false;
+
     if(end.x - start.x + 1 != len && end.y - start.y + 1 != len)                //check len
         return false;
     
@@ -461,7 +498,7 @@ void get_ships(struct node **ships_list, char ship_map[row][col]){
                 end.x --;
 
                 if(start.x > end.x || start.y > end.y)
-                    swap(&start, &end);
+                    swap_point(&start, &end);
 
                 if(isvalid_ship_point(start, end, ShipTypeInfo[i].len, ship_map)){
                     ship new_ship;                                                           //create new node
@@ -544,13 +581,10 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col]){
         }
     
     }
-    Sleep(500);
-    system("cls");
     show_map(ship_map);
-    
 }
 
-void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){                                    //apply changes
+bool shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){                                    //apply changes
     
     if (shot_map[p.x][p.y] == '\0' && p.x < col && p.x >= 0 && p.y < row && p.y >= 0){
         
@@ -582,22 +616,24 @@ void shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){
                             addscore = ShipTypeInfo[i].score;
                     score[turn % 2] += (1 + addscore);       //score for complete destruction of shops
 
-                    return;
+                    return true;
 
                     
                 }
                 shot_map[p.x][p.y] = 'E';
                 score[turn % 2] ++;                                           //one point for each successful shot
-                return;
+                return true;
             }
             curr = curr->next;
 
         }
         shot_map[p.x][p.y] = 'W';
-        return;
+        return true;
     }
-    else
+    else{
         printf("wrong point !\n");                                                  //was chosen=) already
+        return false;
+    }
 }
 
 void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
@@ -618,7 +654,9 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 p.y = p_y - 'A';
                 (p.x)--;
 
-                shot(shot_map_1, ships_list_2, turn, p);
+                if(shot(shot_map_1, ships_list_2, turn, p) == false)
+                    continue;
+
                 show_map(shot_map_1);
                 Sleep(1000);
                 system("cls");
@@ -643,7 +681,9 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 p.y = p_y - 'A';
                 (p.x)--;
 
-                shot(shot_map_2, ships_list_1, turn, p);
+                if(shot(shot_map_2, ships_list_1, turn, p) == false)
+                    continue;
+
                 show_map(shot_map_2);
                 Sleep(1000);
                 system("cls");
@@ -657,6 +697,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
         }
     }
     printf("%s wins!!!\n",name[(turn-1) % 2] );
+    score[turn % 2] /= 2;
     Sleep(500);
     system("cls");
 }
@@ -715,6 +756,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
         }
     }
     printf("%s wins!!!\n",name[(turn-1) % 2] );
+    score[turn % 2] /= 2;
     Sleep(500);
     system("cls");
 }
@@ -820,9 +862,16 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
                 choose_from_user(name, score);
                 break;
             case 2:
+            while (1)
+            {
                 printf("Enter your name: ");
-                getchar();
+                fflush(stdin);
                 gets(name);
+                if(search_in_players(name))
+                    printf("your is already there try agian\n");
+                else
+                    break;
+            }
                 Sleep(1000);
                 system("cls");
             default:
@@ -904,6 +953,8 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             player_setting(ships_list_1,ship_map_1,name[0], &score[0]);                                                 //play with a bot
             strcpy(name[1] , "bot");
             get_ships_auto(ships_list_2, ship_map_2);
+            Sleep(500);
+            system("cls");
             turn = 0;
 
             shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
@@ -931,8 +982,6 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             break;
         case 5:                                                 //setting
             setting();
-            //for(int i = 0;i<number;i++)
-            //    printf("%d %d",ShipTypeInfo[i].len,ShipTypeInfo[i].score);
             break;
         case 6:
             score_board();                                      //score board                               -->file
