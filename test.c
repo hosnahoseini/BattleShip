@@ -66,10 +66,81 @@ typedef struct{
 void f(){
     printf("bye!");
 }
-int main(){
-    atexit(f);
+void score_board(){
+    //sort_score();
+    FILE * fp = fopen("score copy.bin","rb");
+    char name [100];
+    int score;
+    printf("|          name           | score |\n");
+    printf("-----------------------------------\n");
+    while (1)
+    {
+       
+        fread(name, sizeof(char), 100, fp);
+        fread(&score, sizeof(int), 1, fp);
+         if (feof(fp))
+            break;
+        printf("|          %-15s|   %4d|\n", name, score);
+    }
+    printf("press enter to go back to menu: ");
+    fflush(stdin);
     getchar();
-    printf("hi\n");
+    system("cls");
+    fclose(fp);
     
-    exit(0);
+}
+
+int search_in_players(char name[100]){
+    FILE * fp = fopen("score copy.bin","r+b");
+    if(fp == NULL)
+        return -1;
+    
+    char file_name [100];
+    while (1)
+    {
+        fread(file_name, sizeof(char), 100, fp);
+        if(strcmp(name, file_name) == 0){
+            return ftell(fp);
+        }
+        if(feof(fp))
+            break;
+        fseek(fp, sizeof(int), SEEK_CUR);
+        
+    }
+    fclose(fp);
+    return -1;
+}
+/*void save_score(char name[100], int score){
+    
+        FILE * fp = fopen("score.bin","ab");
+        fwrite(name, sizeof(char), 100, fp);
+        fwrite(&score, sizeof(int), 1, fp);
+        fclose(fp);
+
+}*/
+void save_score(char name[100], int score){
+    
+    int k = search_in_players(name);
+
+    if(k != -1){
+        FILE *fp = fopen("score copy.bin","r+b");
+        printf("%d",k);
+        fseek(fp,k, SEEK_SET);
+        //int file_score;
+        
+        fwrite(&score,sizeof(int), 1, fp);
+        printf("%d", score);
+        fclose(fp);
+    }
+    else
+    {
+        FILE * fp = fopen("score copy.bin","ab");
+        fwrite(name, sizeof(char), 100, fp);
+        fwrite(&score, sizeof(int), 1, fp);
+        fclose(fp);
+    }
+}
+int main(){
+    save_score("1",100);
+    score_board();
 }

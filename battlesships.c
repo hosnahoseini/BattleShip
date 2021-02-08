@@ -7,6 +7,7 @@
 #define COL 10
 #define ROW 10
 
+
 //structs
 
 typedef struct{
@@ -51,7 +52,10 @@ int score[2];                                                               //sc
 ship_info *ShipTypeInfo;                                                        //len, number, scores of each ship type
 int number = 4;                                                             //number of ships type
 int players;
-int turn;                                                               // if players == 1 --> play with bot //if players == 2 --> play with friends
+int turn;   
+
+void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);
+void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);                                                            // if players == 1 --> play with bot //if players == 2 --> play with friends
 //linked list functions
 
 struct node * create_node(ship ship_info){
@@ -165,17 +169,17 @@ void empty_map(char map[row][col]){
             map[i][j] = '\0';
 }
 // save
-bool search_in_players(char name[100]){
+int search_in_players(char name[100]){
     FILE * fp = fopen("score.bin","r+b");
     if(fp == NULL)
-        return false;
+        return -1;
     
     char file_name [100];
     while (1)
     {
         fread(file_name, sizeof(char), 100, fp);
         if(strcmp(name, file_name) == 0){
-            return true;
+            return ftell(fp);
         }
         if(feof(fp))
             break;
@@ -183,15 +187,29 @@ bool search_in_players(char name[100]){
         
     }
     fclose(fp);
-    return false;
+    return -1;
 }
 void save_score(char name[100], int score){
     
+    int k = search_in_players(name);
+
+    if(k != -1){
+        FILE *fp = fopen("score.bin","r+b");
+        printf("%d",k);
+        fseek(fp,k, SEEK_SET);
+        //int file_score;
+        
+        fwrite(&score,sizeof(int), 1, fp);
+        printf("%d", score);
+        fclose(fp);
+    }
+    else
+    {
         FILE * fp = fopen("score.bin","ab");
         fwrite(name, sizeof(char), 100, fp);
         fwrite(&score, sizeof(int), 1, fp);
         fclose(fp);
-
+    }
 }
 int cmp(const void *i1, const void *i2){
 	int a =  ((score_board_info *)i1) ->score;
@@ -238,8 +256,19 @@ void sort_score(){
     fclose(fw);
 }   
 void score_board(){
-    sort_score();
     FILE * fp = fopen("score.bin","rb");
+    
+    if(fp == NULL){
+        printf("empty!\n");
+        Sleep(500);
+        system("cls");
+        return;
+    }
+    else
+        rewind(fp);
+    
+    sort_score();
+    
     char name [100];
     int score;
     printf("|          name           | score |\n");
@@ -261,8 +290,16 @@ void score_board(){
     
 }
 
-void choose_from_user(char player_name[], int * player_score){
+bool choose_from_user(char player_name[], int * player_score){
     FILE * fp = fopen("score.bin","rb");
+    if(fp == NULL){
+        printf("empty!\n");
+        Sleep(500);
+        system("cls");
+        return false;
+    }
+    else
+        rewind(fp);
     char name [100];
     int score;
     int cnt = 0;
@@ -289,6 +326,7 @@ void choose_from_user(char player_name[], int * player_score){
     (*player_score) = score;
     system("cls");
     fclose(fp);
+    return true;
     
 }
 int getLinkedListSize(struct node * list){
@@ -360,27 +398,20 @@ void save(){
         fclose(new);
     //}
 }
-void in_game_menu(){
-    char choice;
-    char filename[100];
-    printf("press \'s\' for save, press \'e\' for exit, press any other key(except white space) to shot: ");
-    //scanf(" %c", &choice);
-    fflush(stdin);
-    choice = getchar();
-    switch (choice)
-    {
-    case 's':
-        save();
-        break;
-    case 'e':
-        exit(0);
-    default:
-        break;
-    }
-}
+
 char * print_game(){
-    printf("trying to print game\n");
+    
     FILE * fp = fopen("filesname.bin", "rb");
+    
+    if(fp == NULL){
+        printf("empty!\n");
+        Sleep(500);
+        system("cls");
+        return "\0";
+    }
+    else
+        rewind(fp);
+
     char game_name[100];
     char *name_p = malloc(100 * sizeof(char));
     static int cnt = 0;
@@ -445,6 +476,37 @@ void load(char * game_name){
         fread(&turn, sizeof(int), 1, fp);
         fclose(fp);
     
+}
+void in_game_menu(){
+    char choice;
+    char filename[100];
+    printf("press \'s\' for save, press \'e\' for exit, press \'l\' for load other game, press any other key(except white space) to shot: ");
+    //scanf(" %c", &choice);
+    fflush(stdin);
+    choice = getchar();
+    char* load_game;
+    switch (choice)
+    {
+    case 's':
+        save();
+        break;
+    case 'e':
+        exit(0);
+    case 'l':
+        load_game = print_game();
+        if(strcmp(load_game,"\0") == 0)
+            break;
+        else{
+        load(load_game);
+            if(players == 2)
+                    shot_loop_players(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
+                else
+                    shot_loop_playerbot(&ships_list_1, &ships_list_2, shot_map_1, shot_map_2);
+            break;
+        }
+    default:
+        break;
+    }
 }
 //
 void swap_point(point *p1, point *p2){
@@ -875,7 +937,8 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
             switch (choice2)
             {
             case 1:                     //choose from available users           -->file
-                choose_from_user(name, score);
+                if(choose_from_user(name, score))
+                    n ++;
                 break;
             case 2:
             while (1)
@@ -883,18 +946,18 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
                 printf("Enter your name: ");
                 fflush(stdin);
                 gets(name);
-                if(search_in_players(name))
+                if(search_in_players(name) != -1)
                     printf("your is already there try agian\n");
                 else
                     break;
             }
                 Sleep(1000);
                 system("cls");
+                n ++;
             default:
                 break;
             }
 
-            n ++;
             break;
 
         case 2:
@@ -987,14 +1050,17 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             break;
         case 3:                                                  //load gmae                                 -->fil;
             game_name = print_game();
-            puts(game_name);
+            
+            if(strcmp(game_name,"\0") == 0)
+                break;
+            else{
             load(game_name);
-            printf("done\n");
-            if(players == 2)
-                shot_loop_players(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
-            else
-                shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
-            break;
+                if(players == 2)
+                        shot_loop_players(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
+                    else
+                        shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
+                break;
+            }
         case 4:
             load("last");
             if(players == 2)
