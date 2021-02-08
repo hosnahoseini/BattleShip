@@ -132,13 +132,20 @@ void save_score(char name[100], int score){
         fclose(fp);
     }
 }
-void load(char * game_name){
-        printf("here\n");
-        strcat(game_name,".bin");
-        printf("here\n");
-        puts(game_name);
+void print_list(struct node * list){
+    struct node * curr = list;
+    while (curr != NULL)
+    {
+        printf("%d ", curr->info.len);
+        curr = curr->next;
+    }
+    printf("\n");
+}
+void load(){
+        
+        //puts(game_name);
         printf("here");
-        FILE * fp = fopen(game_name,"rb");
+        FILE * fp = fopen("ma.bin","rb");
         //printf("1\n");
         fread(name,sizeof(char), 100 * 2, fp);
         //printf("2\n");
@@ -180,5 +187,7 @@ void load(char * game_name){
     
 }
 int main(){
-    load("last");
+    load();
+    print_list(ships_list_1);
+    print_list(ships_list_2);
 }

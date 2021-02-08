@@ -421,7 +421,7 @@ char * print_game(){
         cnt ++;
         if(feof(fp))
             break;   
-        printf("|%2d|%25s|\n", cnt, game_name);
+        printf("|%2d|         %12s|\n", cnt, game_name);
         
         
     }
@@ -673,7 +673,9 @@ bool shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){
                         for(int j = curr->info.start.y; j <= curr->info.end.y ; j++)
                             shot_map[i][j] = 'C';
 
-                    
+                    //print_list(ships_list_1);
+                    //print_list(ships_list_2);
+
                     for (int i = curr->info.start.x - 1; i <= curr->info.end.x + 1 ; i++)
                         for(int j = curr->info.start.y - 1; j <= curr->info.end.y + 1; j++){
                             if(i >= 0 && j >= 0 && i < col && j < row && shot_map[i][j] != 'C')
@@ -693,6 +695,7 @@ bool shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){
                 }
                 shot_map[p.x][p.y] = 'E';
                 score[turn % 2] ++;                                           //one point for each successful shot
+                
                 return true;
             }
             curr = curr->next;
@@ -1005,6 +1008,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             players = 2;
             empty_map(shot_map_1);                                                                                          //play with a friend
             empty_map(shot_map_2);
+            score[0] = score[1] = 0;
 
             printf("First player:\n");
             player_setting(ships_list_1, ship_map_1, name[0], &score[0]);
@@ -1026,6 +1030,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             players = 1;
             empty_map(shot_map_1);
             empty_map(shot_map_2);
+            score[0] = score[1] = 0;
             
             printf("First player:\n");
             player_setting(ships_list_1,ship_map_1,name[0], &score[0]);                                                 //play with a bot
