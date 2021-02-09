@@ -263,7 +263,7 @@ void score_board(){                                                 //show score
     
     if(fp == NULL){                                                 //empty
         printf("empty!\n");
-        Sleep(500);
+        Sleep(1500);
         system("cls");
         return;
     }
@@ -331,7 +331,7 @@ void play_back(int turn_to_add, char * name){
             fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
             fread(map, sizeof(char), row * col, fp);
             show_map(map, name);
-            Sleep(1000);
+            Sleep(1500);
             system("cls");
             fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
             
@@ -350,7 +350,7 @@ bool choose_from_user(char player_name[], int * player_score){
 
     if(fp == NULL){
         printf("empty!\n");
-        Sleep(500);
+        Sleep(1500);
         system("cls");
         return false;
     }
@@ -467,7 +467,7 @@ char * print_game(){                                                //print save
     
     if(fp == NULL){
         printf("empty!\n");
-        Sleep(500);
+        Sleep(1500);
         system("cls");
         return "\0";
     }
@@ -665,7 +665,7 @@ void get_ships(struct node **ships_list, char ship_map[row][col], char name[100]
     
     }
     show_map(ship_map, name);
-    Sleep(500);
+    Sleep(1500);
     system("cls");
 }
 
@@ -780,7 +780,7 @@ void end_of_game(){
 
     printf("%s wins!!!\n",name[(turn-1) % 2] );                                    //announce winner
     score[turn % 2] /= 2;                                                           //looser score
-    Sleep(1000);
+    Sleep(1500);
     system("cls");
     
     printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
@@ -839,7 +839,7 @@ void shot_loop_players(){
                 save_map(shot_map_1, turn % 2);                                     //for play back
 
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(1000);
+                Sleep(1500);
                 system("cls");
             } while ((shot_map_1[p.x][p.y] != 'W' || wrong) && ships_list_1 != NULL && ships_list_2 != NULL);
             //          ^bouns                      ^invalid
@@ -869,7 +869,7 @@ void shot_loop_players(){
                 save_map(shot_map_2, turn % 2);
 
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(1000);
+                Sleep(1500);
                 system("cls");
             } while ((shot_map_2[p.x][p.y] != 'W' || wrong) && ships_list_1 != NULL && ships_list_2 != NULL);
             
@@ -912,7 +912,7 @@ void shot_loop_playerbot(){
                 save_map(shot_map_1, turn % 2);
 
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(1000);
+                Sleep(1500);
                 system("cls");
             } while (shot_map_1[p.x][p.y] != 'W' && ships_list_1 != NULL && ships_list_2 != NULL);
             
@@ -933,7 +933,7 @@ void shot_loop_playerbot(){
                 save_map(shot_map_2, turn % 2);
 
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
-                Sleep(1000);
+                Sleep(1500);
                 system("cls");
             } while (shot_map_2[p.x][p.y] != 'W' && ships_list_1 != NULL && ships_list_2 != NULL);
             
@@ -1062,7 +1062,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
                 else
                     break;
             }
-                Sleep(1000);
+                Sleep(1500);
                 system("cls");
                 n ++;
             default:
