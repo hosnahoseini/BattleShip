@@ -290,26 +290,21 @@ void score_board(){
 
 void save_map(char map[row][col],int turn){
     FILE * fp;
-    static int cnt = 0;
+    //static int cnt = 0;
     turn ++;
     char add[1];
     sprintf(add, "%d", turn);
     char filename[100] = "playback";
     strcat(filename,add);
     puts(filename);
-    if(cnt == 0 || cnt == 1)
-        fp = fopen(filename, "wb");
-    else
-        fp = fopen(filename, "ab");
+    fp = fopen(filename, "ab");
     fwrite(map, sizeof(char), row * col, fp);
-    cnt ++;
     fclose(fp);
 }
-void play_back(int turn, char * name){
-    turn ++;
+void play_back(int turn_to_add, char * name){
     char map[row][col];
     char add[1];
-    sprintf(add, "%d", turn);
+    sprintf(add, "%d", turn_to_add + 1);
     char filename[100] = "playback";
     strcat(filename,add);
     puts(filename);
@@ -750,7 +745,36 @@ bool shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){
         return false;
     }
 }
+void end_of_game(){
+    char PlayBack;
+    printf("%s wins!!!\n",name[(turn-1) % 2] );
+    score[turn % 2] /= 2;
+    Sleep(1000);
+    system("cls");
+    
+    printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
+    fflush(stdin);
+    printf("press enter to continue ...");
+    getchar();
+    system("cls");
 
+    printf("Do you want to see the playback?(y/n): ");
+    scanf(" %s", &PlayBack);
+    system("cls");
+    if(PlayBack == 'y'){
+        printf("%s play back", name[0]);
+        play_back(0, name[0]);
+        printf("press enter to continue ...");
+        fflush(stdin);
+        getchar();
+        system("cls");
+        play_back(1, name[1]);
+        printf("press enter to continue ...");
+        fflush(stdin);
+        getchar();
+        system("cls");
+    }
+}
 void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     
     point p;
@@ -815,10 +839,8 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
             
         }
     }
-    printf("%s wins!!!\n",name[(turn-1) % 2] );
-    score[turn % 2] /= 2;
-    Sleep(1000);
-    system("cls");
+    end_of_game();
+    
 }
 
 void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
@@ -874,10 +896,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
             
         }
     }
-    printf("%s wins!!!\n",name[(turn-1) % 2] );
-    score[turn % 2] /= 2;
-    Sleep(1000);
-    system("cls");
+    end_of_game();
 }
 
 bool check_setting(int row, int col, ship_info *ShipTypeInfo){
@@ -1047,6 +1066,9 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
         {
         case 1:
             players = 2;
+            
+            remove("playback1.bin");
+            remove("playback2.bin");
             empty_map(shot_map_1);                                                                                          //play with a friend
             empty_map(shot_map_2);
             score[0] = score[1] = 0;
@@ -1061,28 +1083,13 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             
             save_score(name[0], score[0]);
             save_score(name[1], score[1]);
-            printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
-            fflush(stdin);
-            printf("press enter to continue ...");
-            getchar();
-            system("cls");
 
-            printf("Do you want to see the playback?(y/n): ");
-            scanf(" %s", &PlayBack);
-            if(PlayBack == 'y'){
-                printf("%s play back", name[0]);
-                play_back(0, name[0]);
-                fflush(stdin);
-                getchar();
-                system("cls");
-                play_back(1, name[1]);
-                fflush(stdin);
-                getchar();
-                system("cls");
-            }
             break;
         case 2:
             players = 1;
+
+            remove("playback1.bin");
+            remove("playback2.bin");
             empty_map(shot_map_1);
             empty_map(shot_map_2);
             score[0] = score[1] = 0;
@@ -1099,29 +1106,11 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
 
             save_score(name[0], score[0]);
 
-            printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
-            fflush(stdin);
-            printf("press enter to continue ...");
-            getchar();
-            system("cls");
-
-            printf("Do you want to see the playback?(y/n): ");
-            scanf(" %s", &PlayBack);
-            if(PlayBack == 'y'){
-                printf("%s play back", name[0]);
-                play_back(0, name[0]);
-                fflush(stdin);
-                getchar();
-                system("cls");
-                play_back(1, name[1]);
-                fflush(stdin);
-                getchar();
-                system("cls");
-            }
             break;
         case 3:                                                  //load gmae                                 -->fil;
+            remove("playback1.bin");
+            remove("playback2.bin");
             game_name = print_game();
-            
             if(strcmp(game_name,"\0") == 0)
                 break;
             else{
@@ -1133,6 +1122,8 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
                 break;
             }
         case 4:
+            remove("playback1.bin");
+            remove("playback2.bin");
             load(last);
             if(players == 2)
                 shot_loop_players(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
@@ -1156,7 +1147,7 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
 
 int main(){
     
-    help();
+    //help();
     ShipTypeInfo = (ship_info*) malloc(number * sizeof(ship_info));
     init_ship_info(ShipTypeInfo);
     

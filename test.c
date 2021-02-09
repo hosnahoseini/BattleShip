@@ -232,5 +232,7 @@ void play_back(int turn, char * name){
     fclose(fp);
 }
 int main(){
-    play_back(0,"you");
+    //play_back(0,"you");
+    printf("%d",remove("playback2.bin"));
+    printf("%d",remove("third.bin"));
 }
