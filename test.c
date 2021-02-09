@@ -233,6 +233,9 @@ void play_back(int turn, char * name){
 }
 int main(){
     //play_back(0,"you");
-    printf("%d",remove("playback2.bin"));
-    printf("%d",remove("third.bin"));
+    //FILE * fp = fopen("playback1.bin","ab");
+    //fclose(fp);
+    
+    FILE * fp = fopen("hdsj.bin","ab");
+    fclose(fp);
 }
