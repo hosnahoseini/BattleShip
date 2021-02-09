@@ -288,6 +288,47 @@ void score_board(){
     
 }
 
+void save_map(char map[row][col],int turn){
+    FILE * fp;
+    static int cnt = 0;
+    turn ++;
+    char add[1];
+    sprintf(add, "%d", turn);
+    char filename[100] = "playback";
+    strcat(filename,add);
+    puts(filename);
+    if(cnt == 0 || cnt == 1)
+        fp = fopen(filename, "wb");
+    else
+        fp = fopen(filename, "ab");
+    fwrite(map, sizeof(char), row * col, fp);
+    cnt ++;
+    fclose(fp);
+}
+void play_back(int turn, char * name){
+    turn ++;
+    char map[row][col];
+    char add[1];
+    sprintf(add, "%d", turn);
+    char filename[100] = "playback";
+    strcat(filename,add);
+    puts(filename);
+    FILE * fp = fopen(filename, "rb");
+    fseek(fp,0,SEEK_END);
+    while (1)
+    {
+        fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
+        fread(map, sizeof(char), row * col, fp);
+        show_map(map, name);
+        Sleep(1000);
+        system("cls");
+        fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
+        
+        if(ftell(fp) == 0)
+            break;
+    }
+    fclose(fp);
+}
 bool choose_from_user(char player_name[], int * player_score){
     FILE * fp = fopen("score.bin","rb");
     if(fp == NULL){
@@ -735,7 +776,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                     continue;
                 }
                 show_map(shot_map_1, name[turn % 2]);
-                
+                save_map(shot_map_1, turn % 2);
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1000);
                 system("cls");
@@ -764,7 +805,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 }
 
                 show_map(shot_map_2, name[turn % 2]);
-                
+                save_map(shot_map_2, turn % 2);
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1000);
                 system("cls");
@@ -776,7 +817,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
     }
     printf("%s wins!!!\n",name[(turn-1) % 2] );
     score[turn % 2] /= 2;
-    Sleep(500);
+    Sleep(1000);
     system("cls");
 }
 
@@ -803,7 +844,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
                     continue;
 
                 show_map(shot_map_1, name[turn % 2]);
-                
+                save_map(shot_map_1, turn % 2);
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1000);
                 system("cls");
@@ -823,7 +864,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
 
                 shot(shot_map_2, ships_list_1, turn, p);
                 show_map(shot_map_2, name[turn % 2]);
-                
+                save_map(shot_map_2, turn % 2);
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1000);
                 system("cls");
@@ -835,7 +876,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
     }
     printf("%s wins!!!\n",name[(turn-1) % 2] );
     score[turn % 2] /= 2;
-    Sleep(500);
+    Sleep(1000);
     system("cls");
 }
 
@@ -994,8 +1035,8 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
 
 void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]){
     
-    int choice = 0,PlayAgain;
-    char * game_name;
+    int choice = 0;
+    char * game_name, PlayBack;
     char last[10] = "last";
     while(1){
         menu();
@@ -1025,13 +1066,27 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             printf("press enter to continue ...");
             getchar();
             system("cls");
+
+            printf("Do you want to see the playback?(y/n): ");
+            scanf(" %s", &PlayBack);
+            if(PlayBack == 'y'){
+                printf("%s play back", name[0]);
+                play_back(0, name[0]);
+                fflush(stdin);
+                getchar();
+                system("cls");
+                play_back(1, name[1]);
+                fflush(stdin);
+                getchar();
+                system("cls");
+            }
             break;
         case 2:
             players = 1;
             empty_map(shot_map_1);
             empty_map(shot_map_2);
             score[0] = score[1] = 0;
-            
+
             printf("First player:\n");
             player_setting(ships_list_1,ship_map_1,name[0], &score[0]);                                                 //play with a bot
             strcpy(name[1] , "bot");
@@ -1043,11 +1098,26 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
             shot_loop_playerbot(ships_list_1, ships_list_2, shot_map_1, shot_map_2);
 
             save_score(name[0], score[0]);
+
             printf("%s score = %d\n%s score = %d\n", name[0], score[0], name[1], score[1]);
             fflush(stdin);
             printf("press enter to continue ...");
             getchar();
             system("cls");
+
+            printf("Do you want to see the playback?(y/n): ");
+            scanf(" %s", &PlayBack);
+            if(PlayBack == 'y'){
+                printf("%s play back", name[0]);
+                play_back(0, name[0]);
+                fflush(stdin);
+                getchar();
+                system("cls");
+                play_back(1, name[1]);
+                fflush(stdin);
+                getchar();
+                system("cls");
+            }
             break;
         case 3:                                                  //load gmae                                 -->fil;
             game_name = print_game();

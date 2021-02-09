@@ -186,8 +186,51 @@ void load(){
         fclose(fp);
     
 }
+void show_map(char map[row][col],char name[100]){
+    printf("%s \'s map: \n", name);
+    printf("    ");
+    for(char c = 'A'; c < ('A' + col); c++)
+        printf("| %c ",c);
+    printf("|\n");
+
+    for(int i = 0; i < (4*(col+1))+1 ; i++)
+        printf("-");
+    printf("\n");
+
+    for (int i = 0; i < row; i++)
+    {
+        printf("|%2d ", i + 1);
+        for (int j = 0; j < col; j++)
+            printf("| %c ", map[i][j]);
+        printf("|\n");
+
+        for(int i = 0; i < (4*(col+1))+1 ; i++)
+            printf("-");
+        printf("\n");
+    }
+}
+void play_back(int turn, char * name){
+    turn ++;
+    char map[row][col];
+    char add[1];
+    sprintf(add, "%d", turn);
+    char filename[100] = "playback";
+    strcat(filename,add);
+    puts(filename);
+    FILE * fp = fopen(filename, "rb");
+    fseek(fp,0,SEEK_END);
+    while (1)
+    {
+        fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
+        fread(map, sizeof(char), row * col, fp);
+        show_map(map, name);
+        fseek(fp, -1 * sizeof(char) * row * col , SEEK_CUR);
+        
+        if(ftell(fp) == 0)
+            break;
+    }
+    fclose(fp);
+}
 int main(){
-    load();
-    print_list(ships_list_1);
-    print_list(ships_list_2);
+    play_back(0,"you");
 }
