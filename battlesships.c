@@ -54,6 +54,7 @@ ship_info *ShipTypeInfo;                                                    //le
 int number = 4;                                                             //number of ships type
 int players;                                                                //show number of real plyers: if players == 1 --> play with bot //if players == 2 --> play with friends
 int turn;   
+int rocket_done;
 void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);
 void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);  
 
@@ -173,6 +174,16 @@ void empty_map(char map[row][col]){
     for(int i = 0; i < row ; i ++)
         for(int j = 0; j < col; j++)
             map[i][j] = '\0';
+}
+
+int getLinkedListSize(struct node * list){
+    int cnt = 0;
+    struct node * curr = list;
+    while(curr != NULL){
+        curr = curr -> next;
+        cnt ++;
+    }
+    return cnt;
 }
 
 // save
@@ -384,16 +395,6 @@ bool choose_from_user(char player_name[], int * player_score){
     fclose(fp);
     return true;
     
-}
-
-int getLinkedListSize(struct node * list){
-    int cnt = 0;
-    struct node * curr = list;
-    while(curr != NULL){
-        curr = curr -> next;
-        cnt ++;
-    }
-    return cnt;
 }
 
 void write_info_in_file(FILE * fp){
@@ -736,7 +737,7 @@ bool shot(char shot_map[row][col],struct node ** ships_list, int turn, point p){
     }
 }
 
-char shot_rocket(char shot_map[row][col],struct node ** ships_list, int turn, point p){
+char shot_rocket(char shot_map[row][col], struct node ** ships_list, int turn, point p){
     struct node *curr = *ships_list;
         while (curr != NULL)                                                               //check for each ship in list
         {
@@ -759,7 +760,6 @@ char shot_rocket(char shot_map[row][col],struct node ** ships_list, int turn, po
 
                     delete_node(ships_list, curr);
 
-                    int addscore;
                     for(int i = 0; i < number; i++)
                         if(ShipTypeInfo[i].len == curr->info.len)
                             score[turn % 2] += (1 + ShipTypeInfo[i].score);         //score for complete destruction of shops
@@ -780,18 +780,20 @@ char shot_rocket(char shot_map[row][col],struct node ** ships_list, int turn, po
 }
 
 void rocket(char shot_map[row][col],struct node ** ships_list){
-    if(rocket_num[turn % 2] == 0 && score[turn % 2] >= 10){
+    
         char h_v;
         int num;
         printf("Enter horizontal(H) or vertical(V) and then number of row/column: ");
-        scanf("%c %d", &h_v, &num);
+        scanf(" %c %d", &h_v, &num);
         num --;
         point p;
-
+        printf("%c %d", h_v, num);
+        Sleep(2000);
         if(h_v == 'H'){
             for(int x = 0; x < col; x ++ ){
                 p.x = x;
                 p.y = num;
+                printf("%d %d\n", p.x, p.y);
                 printf("here!\n");
                 if(shot_rocket(shot_map, ships_list, turn % 2, p) == 'E' || shot_rocket(shot_map, ships_list, turn % 2, p) == 'C')
                     break;
@@ -802,6 +804,7 @@ void rocket(char shot_map[row][col],struct node ** ships_list){
             for(int y = 0; y < col; y ++ ){
                 p.x = num;
                 p.y = y;
+                printf("%d %d\n", p.x, p.y);
                 if(shot_rocket(shot_map, ships_list, turn % 2, p) == 'E' || shot_rocket(shot_map, ships_list, turn % 2, p) == 'C')
                     break;
             }  
@@ -809,9 +812,9 @@ void rocket(char shot_map[row][col],struct node ** ships_list){
         score[turn % 2] -= 10;
         rocket_num[turn % 2] ++;
         show_map(shot_map, name[turn % 2]);
-    }
-    else
-        printf("you can't:(");
+        turn ++;
+        printf("%d\n", turn);
+    
     
     Sleep(1000);
     system("cls");
@@ -846,7 +849,11 @@ void in_game_menu(char shot_map[row][col],struct node ** ships_list){
             break;
         }
         case 'r':
-        rocket(shot_map, ships_list);
+            if(rocket_num[turn % 2] == 0 && score[turn % 2] >= 10)
+                rocket(shot_map, ships_list);
+            
+            else
+                printf("you can't:(\n");
     default:
         break;
     }
@@ -892,14 +899,19 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
     char p_y;
     int wrong = 0;
     while(*ships_list_1 != NULL && *ships_list_2 != NULL){
-        if(turn % 2 == 0){                                                                                           //player1 
+        //if(){                                                                                           //player1 
             do
             {
+                rocket_done = 0;
                 wrong = 0;
                 show_map(shot_map_1, name[turn % 2]);
 
                 printf("%s is your turn:\n", name[turn % 2]);
                 in_game_menu(shot_map_1, ships_list_2);
+
+                if(rocket_num[0] == 1)
+                    continue;
+                
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -917,12 +929,15 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1500);
                 system("cls");
-            } while ((shot_map_1[p.x][p.y] != 'W' || wrong) && *ships_list_1 != NULL && *ships_list_2 != NULL);
+            } while (turn % 2 == 0 && (shot_map_1[p.x][p.y] != 'W' || wrong) && *ships_list_1 != NULL && *ships_list_2 != NULL);
             //          ^bouns                      ^invalid
-            turn ++;
-        }
-        else                                                                                                       //player2
-        {
+            if(rocket_num[0] == 1)
+                rocket_num[0] = 2;
+            else
+                turn ++;     
+        //}
+        //else                                                                                                       //player2
+        //{
              do
             {
                 wrong = 0;
@@ -930,6 +945,10 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
 
                 printf("%s is your turn:\n", name[turn % 2]);
                 in_game_menu(shot_map_2, ships_list_1);
+
+                if(rocket_num[1] == 1)
+                    continue;
+
                 printf("Enter your shot: ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
@@ -947,11 +966,14 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1500);
                 system("cls");
-            } while ((shot_map_2[p.x][p.y] != 'W' || wrong) && *ships_list_1 != NULL && *ships_list_2 != NULL);
+            } while (turn % 2 == 1 && (shot_map_2[p.x][p.y] != 'W' || wrong) && *ships_list_1 != NULL && *ships_list_2 != NULL);
             
-            turn ++;
+            if(rocket_num[1] == 1)
+                rocket_num[1] = 2;
+            else
+                turn ++;  
             
-        }
+        //}
     }
     end_of_game();
     
@@ -965,9 +987,10 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
     time_t t=time(NULL);
     srand(t);
     while(*ships_list_1 != NULL && *ships_list_2 != NULL){
-        if(turn % 2 == 0){
+        //if(turn % 2 == 0){
             do
             {
+                
                 wrong = 0;
                 show_map(shot_map_1, name[turn % 2]);
                 printf("%s is your turn:\n", name[turn % 2]);
@@ -990,10 +1013,11 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
                 system("cls");
             } while ((shot_map_1[p.x][p.y] != 'W' || wrong) && *ships_list_1 != NULL && *ships_list_2 != NULL);
             
-            turn ++;
-        }
-        else                                                                                                                //bot turn
-        {
+            
+                turn ++;  
+        //}
+        //else                                                                                                                //bot turn
+        //{
              do
             {
                 do
@@ -1013,7 +1037,7 @@ void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_
             
             turn ++;
             
-        }
+        //}
     }
     end_of_game();
 }
