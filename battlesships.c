@@ -21,7 +21,6 @@ typedef struct{
     point end;
     int len;
     int destroy;                //number of destroyed cells
-    int num;
 }ship;                          //info of each ship
 
 struct node{
@@ -55,7 +54,8 @@ int number = 4;                                                             //nu
 int players;                                                                //show number of real plyers: if players == 1 --> play with bot //if players == 2 --> play with friends
 int turn;   
 void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);
-void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);                      
+void shot_loop_playerbot(struct node ** ships_list_1, struct node ** ships_list_2, char shot_map_1[row][col], char shot_map_2[row][col]);  
+
 //linked list functions
 
 struct node * create_node(ship ship_info){
@@ -110,7 +110,13 @@ void print_list(struct node * list){
 //game functions
 
 void help(){
-    printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.\npress any key to continue...");
+    printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.\n\n");
+    printf ("XXXXX   XXXX  XXXXXX XXXXXX XX     XXXXXX  XXXXX XX  XX XX XXXX\n");
+	printf ("XX  XX XX  XX   XX     XX   XX     XX     XX     XX  XX XX XX  XX\n");
+	printf ("XXXXX  XX  XX   XX     XX   XX     XXXX    XXXX  XXXXXX XX XXXX\n"); 
+	printf ("XX  XX XXXXXX   XX     XX   XX     XX         XX XX  XX XX XX\n");
+	printf ("XXXXX  XX  XX   XX     XX   XXXXXX XXXXXX XXXXX  XX  XX XX XX\n");
+	printf ("\npress any key to continue...\n");
     getchar();
     system("cls");
 }
@@ -258,6 +264,7 @@ void sort_score(){
 }  
 
 void score_board(){                                                 //show score board
+    int cnt = 1;
     FILE * fp = fopen("score.bin","rb");
     
     if(fp == NULL){                                                 //empty
@@ -273,8 +280,8 @@ void score_board(){                                                 //show score
     
     char name [100];
     int score;
-    printf("|          name           | score |\n");
-    printf("-----------------------------------\n");
+    printf("|##|          name           | score |\n");
+    printf("--------------------------------------\n");
     while (1)
     {
        
@@ -282,12 +289,10 @@ void score_board(){                                                 //show score
         fread(&score, sizeof(int), 1, fp);
          if (feof(fp))
             break;
-        printf("|          %-15s|   %-4d|\n", name, score);
+        printf("|%2d|          %-15s|   %-4d|\n", cnt, name, score);
+        cnt ++;
     }
-    printf("press enter to go back to menu: ");
-    fflush(stdin);
-    getchar();
-    system("cls");
+    
     fclose(fp);
     
 }
@@ -361,20 +366,8 @@ bool choose_from_user(char player_name[], int * player_score){
     int score;
     int cnt = 0;
 
-    printf("|##|          name           |\n");
-    printf("-----------------------------\n");
-    while (1)
-    {
-       
-        fread(name, sizeof(char), 100, fp);
-        cnt ++;
-        fread(&score, sizeof(int), 1, fp);
+    score_board();
 
-         if (feof(fp))
-            break;
-
-        printf("|%2d|          %-15s|\n", cnt, name);
-    }
     printf("Enter # of user: ");
     int n;
     scanf("%d", &n);
@@ -612,7 +605,7 @@ bool isvalid_ship_point(point start, point end, int len, char ship_map[row][col]
 }
 
 void get_ships(struct node **ships_list, char ship_map[row][col], char name[100]){                    
-    int ship_index = 1;
+    
     printf("Enter start and end point of your ships:\n");
     
     for (int i = 0; i < number; i++)                                               //loop for differrnt len
@@ -623,7 +616,7 @@ void get_ships(struct node **ships_list, char ship_map[row][col], char name[100]
         {
 
             int IsValid = 0;                                                 //for cheking validation of points
-            while(IsValid == 0){                                             //getting start point ship[ship_index]
+            while(IsValid == 0){                                             //getting start point ship
                 point start, end;
                 char start_y, end_y;
                 printf("Start point of ship #%d with len %d (x, y): ", j + 1,ShipTypeInfo[i].len);
@@ -646,7 +639,7 @@ void get_ships(struct node **ships_list, char ship_map[row][col], char name[100]
                     new_ship.destroy = 0;
                     new_ship.start = start;
                     new_ship.end = end;
-                    new_ship.num = ship_index;
+                    
                     add_end(ships_list,create_node(new_ship));                             //add to list
 
                     for (int k = start.x; k <= end.x ; k++)                                //mark ships place in matrix ship_map 
@@ -654,7 +647,7 @@ void get_ships(struct node **ships_list, char ship_map[row][col], char name[100]
                             ship_map[k][m] = 'X';
 
                     IsValid = 1;
-                    ship_index ++;
+                    
                 }
                 else
                     printf("Invalid point! try again\n");
@@ -672,7 +665,6 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col], char name
     empty_map(ship_map);
     (*ships_list) = NULL;                                                      //delete previous one!
                     
-    int ship_index = 1;
     time_t t=time(NULL);
     srand(t);
 
@@ -683,7 +675,7 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col], char name
         {
 
             int IsValid = 0;                                                 //for cheking validation of points
-            while(IsValid == 0){                                             //getting start point ship[ship_index]
+            while(IsValid == 0){                                             //getting start point ship
                 point start, end;
                 int horizontal_or_vetical = rand() % 2;                      //horizontal_or_vetical = 0 --> horizontal
                                                                              //horizontal_or_vetical = 1 -->vertical
@@ -706,7 +698,7 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col], char name
                     new_ship.destroy = 0;
                     new_ship.start = start;
                     new_ship.end = end;
-                    new_ship.num = ship_index;
+                    
                     add_end(ships_list,create_node(new_ship));                             //add to list
 
                     for (int k = start.x; k <= end.x ; k++)                                //mark ships place in matrix ship_map 
@@ -714,7 +706,7 @@ void get_ships_auto(struct node **ships_list, char ship_map[row][col], char name
                             ship_map[k][m] = 'X';
 
                     IsValid = 1;
-                    ship_index ++;
+                    
                 }
             }
         
@@ -1189,6 +1181,10 @@ void game_loop(struct node ** ships_list_1, struct node ** ships_list_2, char sh
 
         case 6:
             score_board();                                                                                    //score board       
+            printf("press enter to go back to menu: ");
+            fflush(stdin);
+            getchar();
+            system("cls");
             break;
 
         case 7:
