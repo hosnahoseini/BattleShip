@@ -914,7 +914,7 @@ void shot_loop_playerbot(){
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1500);
                 system("cls");
-            } while (shot_map_1[p.x][p.y] != 'W' && ships_list_1 != NULL && ships_list_2 != NULL);
+            } while ((shot_map_1[p.x][p.y] != 'W' || wrong) && ships_list_1 != NULL && ships_list_2 != NULL);
             
             turn ++;
         }
@@ -935,7 +935,7 @@ void shot_loop_playerbot(){
                 printf("%s score = %d\n", name[turn % 2], score[turn % 2]);
                 Sleep(1500);
                 system("cls");
-            } while (shot_map_2[p.x][p.y] != 'W' && ships_list_1 != NULL && ships_list_2 != NULL);
+            } while ((shot_map_2[p.x][p.y] != 'W' || wrong) && ships_list_1 != NULL && ships_list_2 != NULL);
             
             turn ++;
             
