@@ -110,7 +110,7 @@ void print_list(struct node * list){
 //game functions
 
 void help(){
-    printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.\n\n");
+    printf("Battleship (also Battleships or Sea Battle) is a strategy type guessing game for two players.\n");
     printf ("XXXXX   XXXX  XXXXXX XXXXXX XX     XXXXXX  XXXXX XX  XX XX XXXX\n");
 	printf ("XX  XX XX  XX   XX     XX   XX     XX     XX     XX  XX XX XX  XX\n");
 	printf ("XXXXX  XX  XX   XX     XX   XX     XXXX    XXXX  XXXXXX XX XXXX\n"); 
@@ -344,8 +344,9 @@ void play_back(int turn_to_add, char * name){
         }
         fclose(fp);
 
-        empty_map(shot_map_1);
-        show_map(shot_map_1, name);                             //show empty map
+        char empty [row][col];
+        empty_map(empty);
+        show_map(empty, name);                             //show empty map
     }
 }
 
@@ -817,7 +818,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
 
                 printf("%s is your turn:\n", name[turn % 2]);
                 in_game_menu();
-                printf("Enter your shot: ");
+                printf("Enter your shot(number alphaber(upper case)): ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
                 p.y = p_y - 'A';
