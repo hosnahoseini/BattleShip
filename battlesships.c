@@ -169,7 +169,7 @@ void help(){
 	printf ("XXXXX  XX  XX   XX     XX   XX     XXXX    XXXX  XXXXXX XX XXXX\n"); 
 	printf ("XX  XX XXXXXX   XX     XX   XX     XX         XX XX  XX XX XX\n");
 	printf ("XXXXX  XX  XX   XX     XX   XXXXXX XXXXXX XXXXX  XX  XX XX XX\n");
-	printf ("\npress any key to continue...\n");
+	printf ("\npress enter to continue...\n");
     getchar();
     system("cls");
 }
@@ -595,7 +595,7 @@ void play_back(int turn_to_add, char * name){
 
     FILE * fp = fopen(filename, "rb");
 
-    if(fp == NULL){                                                //the player don't have any move
+    if(fp == NULL){                                                //the player don't have move
         empty_map(shot_map_1);
         show_map(shot_map_1, name);
     }
@@ -1110,7 +1110,7 @@ void player_setting(struct node ** ships_list, char ship_map[row][col], char * n
 void in_game_menu(){
     char choice;
     char filename[100];
-    printf("press \'s\' for save, press \'e\' for exit, press \'l\' for load other game, press any other key to shot: ");
+    printf("press \'s\' for save, press \'e\' for exit, press \'l\' for load other game, press enter to shot: ");
     fflush(stdin);
     choice = getchar();
 
