@@ -358,7 +358,7 @@ void shot_loop_players(struct node ** ships_list_1, struct node ** ships_list_2,
 
                 printf("%s is your turn:\n", name[turn % 2]);
                 in_game_menu();
-                printf("Enter your shot: ");
+                printf("Enter your shot(number alphaber(upper case)): ");
                 scanf("%d %c", &p.x,&p_y);
                 system("cls");
                 p.y = p_y - 'A';
