@@ -589,7 +589,7 @@ void save_score(char name[100], int score){
     int k = search_in_players(name);
 
     if(k != -1){                                                              //reapeated name --> replace new score with old one
-        FILE *fp = fopen("score.bin","w+b");
+        FILE *fp = fopen("score.bin","r+b");
         fseek(fp,k, SEEK_SET);
         
         fwrite(&score,sizeof(int), 1, fp);
@@ -1256,11 +1256,11 @@ void in_game_menu(){
         case 'r':
             if(rocket_num[turn % 2] == 0 && score[turn % 2] >= 100)
                 if(turn % 2)
-                    {rocket(shot_map_2, &ships_list_1);
-                    print_list(ships_list_1);}
+                    rocket(shot_map_2, &ships_list_1);
+                    
                 else
-                    {rocket(shot_map_1, &ships_list_2);
-                    print_list(ships_list_2);}
+                    rocket(shot_map_1, &ships_list_2);
+                    
             
             else
                 printf("you can't:(\n");
