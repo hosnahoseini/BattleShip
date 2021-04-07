@@ -6,8 +6,8 @@
 #include<windows.h>
 #include<string.h>
 
-#define COL 10
-#define ROW 10
+#define COL 100
+#define ROW 100
 
 //structs
 
@@ -41,7 +41,7 @@ typedef struct{
 
 //global variable
 
-int row = ROW,col = COL;
+int row = 10,col = 10;
 char ship_map_1[ROW][COL];                                                  //player1 ship places                                                    
 char shot_map_1[ROW][COL];                                                  //player1 shot places
 char ship_map_2[ROW][COL];                                                  //player2 ship places    
@@ -552,7 +552,7 @@ void rocket(char shot_map[row][col],struct node ** ships_list){
             }  
         }
 
-        score[turn % 2] -= 100;
+        score[turn % 2] -= 10;
         rocket_num[turn % 2] ++;
         show_map(shot_map, name[turn % 2]);
 
@@ -1254,7 +1254,7 @@ void in_game_menu(){
             break;
         }
         case 'r':
-            if(rocket_num[turn % 2] == 0 && score[turn % 2] >= 100)
+            if(rocket_num[turn % 2] == 0 && score[turn % 2] >= 10)
                 if(turn % 2)
                     rocket(shot_map_2, &ships_list_1);
                     
